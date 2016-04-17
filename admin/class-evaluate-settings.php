@@ -19,6 +19,12 @@ class Evaluate_Settings {
 	public static $api_key = 'api_key';
 	public static $server = 'server';
 
+	private static $permissions = array(
+		'evaluate_display' => "Display Metrics",
+		'evaluate_metrics' => "Edit Metrics",
+		'evaluate_rubrics' => "Manage Rubrics",
+	);
+
 	/**
 	 * @filter init
 	 */
@@ -45,6 +51,7 @@ class Evaluate_Settings {
 		add_settings_field( "evaluate_server", "Server", array( __CLASS__, 'render_server' ), self::$page_key, self::$section_key );
 		// TODO: Retrieve API Key automatically, using LTI and Server url.
 		add_settings_field( "evaluate_api_key", "API Key", array( __CLASS__, 'render_api_key' ), self::$page_key, self::$section_key );
+		add_settings_field( "evaluate_permissions", "Permissions", array( __CLASS__, 'render_permissions' ), self::$page_key, self::$section_key );
 	}
 
 	/**
@@ -107,10 +114,69 @@ class Evaluate_Settings {
 		echo ob_get_clean();
 	}
 
+	public static function render_permissions() {
+		$roles = get_editable_roles();
+
+		ob_start();
+		?>
+		<table>
+			<thead>
+				<tr>
+					<th></th>
+					<?php
+					foreach ( self::$permissions as $value => $title ) {
+						?>
+						<th><?php echo $title; ?></th>
+						<?php
+					}
+					?>
+				</tr>
+			</thead>
+			<tbody>
+				<?php
+				foreach ( $roles as $slug => $info ) {
+					?>
+					<tr>
+						<th><?php echo $info['name']; ?></th>
+						<?php
+						foreach ( self::$permissions as $permission => $title ) {
+							$name = self::$settings_key . "[permissions][" . $slug . "][" . $permission . "]";
+							?>
+							<td>
+								<input type="checkbox" name="<?php echo $name; ?>" value="on" <?php checked( ! empty( $info['capabilities'][ $permission ] ) ); ?>>
+							</td>
+							<?php
+						}
+						?>
+					</tr>
+					<?php
+				}
+				?>
+			</tbody>
+		</table>
+		<?php
+		echo ob_get_clean();
+	}
+
 	public static function validate_settings( $input ) {
 		$result[ self::$server ] = untrailingslashit( trim( $input[ self::$server ] ) );
-		error_log( "Validating " . print_r( $result, true ) );
+
+		$permissions = empty ( $input['permissions'] ) ? array() : $input['permissions'];
+		self::set_permissions( $permissions );		
+
 		return $result;
+	}
+
+	public static function set_permissions( $permissions ) {
+		$roles = get_editable_roles();
+
+		foreach ( $roles as $slug => $info ) {
+			$role = get_role( $slug );
+
+			foreach ( self::$permissions as $permission => $name ) {
+				$role->add_cap( $permission, ! empty( $permissions[ $slug ][ $permission ] ) );
+			}
+		}
 	}
 
 }
