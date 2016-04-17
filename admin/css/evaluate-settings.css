@@ -1,0 +1,34 @@
+
+.form-table th,
+.form-table td {
+	padding-top: 0;
+	padding-bottom: 0;
+	width: auto;
+}
+
+.form-table td input[type="text"] {
+	width: 100%;
+}
+
+.submit {
+	margin: 0 !important;
+	padding-top: 2px;
+}
+
+form h3 {
+	display: none;
+}
+
+table td,
+table th {
+	padding: 0 10px;
+}
+
+table th:first-child {
+	text-align: left;
+	padding-left: 0;
+}
+
+table td {
+	text-align: center;
+}

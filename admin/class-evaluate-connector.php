@@ -98,8 +98,12 @@ class Evaluate_Connector {
 		}
 	}
 
-	public static function post( $path, $data ) {
+	public static function post( $path, $data, $auth = false ) {
 		$url = self::$server . $path;
+
+		if ( $auth ) {
+			$data = array_merge( $data, self::get_launch_data( $url ) );
+		}
 
 		$context = stream_context_create( array(
 			'http' => array(
@@ -108,8 +112,6 @@ class Evaluate_Connector {
 				'content' => http_build_query( $data ),
 			),
 		) );
-
-		//return file_get_contents( $url, false, $context );
 
 		$file = fopen( $url, 'rb', false, $context );
 		$response = stream_get_contents( $file );

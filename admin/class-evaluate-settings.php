@@ -42,7 +42,7 @@ class Evaluate_Settings {
 	 * @filter admin_enqueue_scripts
 	 */
 	public static function register_scripts_and_styles() {
-		wp_register_style( 'evaluate-admin', Evaluate::$directory_url . 'admin/css/evaluate-admin.css' );
+		wp_register_style( 'evaluate-settings', Evaluate::$directory_url . 'admin/css/evaluate-settings.css' );
 	}
 
 	public static function register_setting() {
@@ -72,7 +72,7 @@ class Evaluate_Settings {
 	 * Render the form page.
 	 */
 	public static function render_page() {
-		wp_enqueue_style( 'evaluate-admin' );
+		wp_enqueue_style( 'evaluate-settings' );
 
 		?>
 		<div class="wrap">
