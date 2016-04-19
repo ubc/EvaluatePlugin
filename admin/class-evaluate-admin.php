@@ -106,8 +106,16 @@ class Evaluate_Admin {
 				<a href="test" class="page-title-action">Add New</a>
 			</h1>
 			<?php
-			foreach ( $metrics as $index => $metric ) {
-				self::render_metric( $metric, $cases );
+			if ( empty( $metrics ) ) {
+				?>
+				<div class="notice notice-warning">
+					<p>No Metrics Received from the Server.</p>
+				</div>
+				<?php
+			} else {
+				foreach ( $metrics as $index => $metric ) {
+					self::render_metric( $metric, $cases );
+				}
 			}
 			?>
 		</div>

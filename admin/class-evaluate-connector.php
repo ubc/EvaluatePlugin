@@ -113,8 +113,18 @@ class Evaluate_Connector {
 			),
 		) );
 
-		$file = fopen( $url, 'rb', false, $context );
-		$response = stream_get_contents( $file );
+		if ( file_exists( $url ) ) {
+			$file = fopen( $url, 'rb', false, $context );
+			$response = stream_get_contents( $file );
+		} else {
+			?>
+			<div class="notice notice-error">
+				<p>Could not contact server: <a href="<?php echo $url; ?>"><?php echo $url; ?></a></p>
+			</div>
+			<?php
+			$response = null;
+		}
+
 		return $response;
 	}
 }
