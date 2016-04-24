@@ -6,23 +6,19 @@
  */
 
 // TODO: Support Custom CSS
-class Evaluate_Settings {
+class Evaluate_Manage {
 	// This slug is used for the admin page.
 	public static $page_key = 'evaluate';
 	// This slug is used for the settings group.
 	public static $section_key = 'evaluate';
-	// Used to store our plugin settings
-	public static $settings_key = 'evaluate_settings';
 	// The capability that a user needs to edit the form.
 	public static $required_capability = 'manage_options';
-
-	public static $api_key = 'api_key';
-	public static $server = 'server';
 
 	private static $permissions = array(
 		'evaluate_display' => "Display Metrics",
 		'evaluate_metrics' => "Edit Metrics",
 		'evaluate_rubrics' => "Manage Rubrics",
+		'evaluate_vote_everywhere' => "See Admin Only Metrics",
 	);
 
 	/**
@@ -42,12 +38,14 @@ class Evaluate_Settings {
 	 * @filter admin_enqueue_scripts
 	 */
 	public static function register_scripts_and_styles() {
-		wp_register_style( 'evaluate-settings', Evaluate::$directory_url . 'admin/css/evaluate-settings.css' );
+		wp_register_style( 'evaluate-manage', Evaluate::$directory_url . 'admin/css/evaluate-manage.css' );
 	}
 
+	// TODO: Add Consumer Key, Consumer Secret, Allow Anonymous, Stylesheet URL
 	public static function register_setting() {
-		register_setting( self::$section_key, self::$settings_key, array( __CLASS__, 'validate_settings' ) );
+		register_setting( self::$section_key, Evaluate_Settings::$settings_key, array( __CLASS__, 'validate_settings' ) );
 		add_settings_section( self::$section_key, 'Settings', array( __CLASS__, 'render_settings_description' ), self::$page_key );
+		
 		add_settings_field( "evaluate_server", "Server", array( __CLASS__, 'render_server' ), self::$page_key, self::$section_key );
 		// TODO: Retrieve API Key automatically, using LTI and Server url.
 		add_settings_field( "evaluate_api_key", "API Key", array( __CLASS__, 'render_api_key' ), self::$page_key, self::$section_key );
@@ -72,7 +70,7 @@ class Evaluate_Settings {
 	 * Render the form page.
 	 */
 	public static function render_page() {
-		wp_enqueue_style( 'evaluate-settings' );
+		wp_enqueue_style( 'evaluate-manage' );
 
 		?>
 		<div class="wrap">
@@ -93,31 +91,22 @@ class Evaluate_Settings {
 	}
 
 	public static function render_server() {
-		$options = get_option( self::$settings_key );
-		$value = key_exists( self::$server, $options ) ? $options[ self::$server ] : "";
-
-		ob_start();
+		$value = Evaluate_Settings::get_settings( 'server' );
 		?>
-		<input id="<?php echo self::$server; ?>" name="<?php echo self::$settings_key; ?>[<?php echo self::$server; ?>]" type="text" size="40" value="<?php echo $value; ?>"></input>
+		<input id="server" name="<?php echo Evaluate_Settings::$settings_key; ?>[server]" type="text" size="40" value="<?php echo $value; ?>"></input>
 		<?php
-		echo ob_get_clean();
 	}
 
 	public static function render_api_key() {
-		$options = get_option( self::$settings_key );
-		$value = key_exists( self::$api_key, $options ) ? $options[ self::$api_key ] : "";
-
-		ob_start();
+		$value = Evaluate_Settings::get_settings( 'api_key' );
 		?>
-		<input id="<?php echo self::$api_key; ?>" type="text" size="40" disabled="disabled" value="<?php echo $value; ?>" placeholder="TODO: Implement Automatic API Key fetch."></input>
+		<input id="api_key" type="text" size="40" disabled="disabled" value="<?php echo $value; ?>" placeholder="TODO: Implement Automatic API Key fetch."></input>
 		<?php
-		echo ob_get_clean();
 	}
 
 	public static function render_permissions() {
 		$roles = get_editable_roles();
 
-		ob_start();
 		?>
 		<table>
 			<thead>
@@ -140,7 +129,7 @@ class Evaluate_Settings {
 						<th><?php echo $info['name']; ?></th>
 						<?php
 						foreach ( self::$permissions as $permission => $title ) {
-							$name = self::$settings_key . "[permissions][" . $slug . "][" . $permission . "]";
+							$name = Evaluate_Settings::$settings_key . "[permissions][" . $slug . "][" . $permission . "]";
 							?>
 							<td>
 								<input type="checkbox" name="<?php echo $name; ?>" value="on" <?php checked( ! empty( $info['capabilities'][ $permission ] ) ); ?>>
@@ -155,11 +144,10 @@ class Evaluate_Settings {
 			</tbody>
 		</table>
 		<?php
-		echo ob_get_clean();
 	}
 
 	public static function validate_settings( $input ) {
-		$result[ self::$server ] = untrailingslashit( trim( $input[ self::$server ] ) );
+		$result[ 'server' ] = untrailingslashit( trim( $input[ 'server' ] ) );
 
 		$permissions = empty ( $input['permissions'] ) ? array() : $input['permissions'];
 		self::set_permissions( $permissions );		
@@ -181,4 +169,4 @@ class Evaluate_Settings {
 
 }
 
-add_action( 'init', array( 'Evaluate_Settings', 'init' ) );
+add_action( 'init', array( 'Evaluate_Manage', 'init' ) );

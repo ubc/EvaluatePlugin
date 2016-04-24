@@ -2,7 +2,6 @@
 
 class Evaluate_Connector {
 
-	private static $server;
 	private static $lti_key;
 	private static $lti_secret;
 	private static $launch_data = array(
@@ -25,8 +24,6 @@ class Evaluate_Connector {
 	);
 
 	public static function init() {
-		$options = get_option( Evaluate_Settings::$settings_key );
-		self::$server = $options[ Evaluate_Settings::$server ];
 		self::$lti_key = "testconsumerkey";
 		self::$lti_secret = "testconsumersecret";
 	}
@@ -42,7 +39,7 @@ class Evaluate_Connector {
 		$launch_data["oauth_callback"] = "about:blank";
 		$launch_data["oauth_consumer_key"] = self::$lti_key;
 		$launch_data["oauth_version"] = "1.0";
-		$launch_data["oauth_nonce"] = uniqid('', true);
+		$launch_data["oauth_nonce"] = uniqid( '', true );
 		$launch_data["oauth_timestamp"] = $now->getTimestamp();
 		$launch_data["oauth_signature_method"] = "HMAC-SHA1";
 
@@ -64,7 +61,7 @@ class Evaluate_Connector {
 	}
 
 	public static function print_frame( $path, $auth = false ) {
-		$url = self::$server . $path;
+		$url = Evaluate_Settings::get_settings( 'server' ) . $path;
 
 		if ( $auth ) {
 			$launch_data = self::get_launch_data( $url );
@@ -82,7 +79,6 @@ class Evaluate_Connector {
 				</form>
 				<script>
 					window.onload = function() {
-						console.log('submit');
 						document.getElementById("ltiLaunchForm").submit();
 						document.getElementById("ltiLaunchDiv").remove();
 					};
@@ -98,35 +94,41 @@ class Evaluate_Connector {
 		}
 	}
 
-	public static function post( $path, $data, $auth = false ) {
-		$url = self::$server . $path;
+	public static function request( $path, $data, $type = "POST", $auth = false ) {
+		$url = Evaluate_Settings::get_settings( 'server' ) . $path;
+		$query = http_build_query( $data );
 
 		if ( $auth ) {
 			$data = array_merge( $data, self::get_launch_data( $url ) );
 		}
 
-		$context = stream_context_create( array(
-			'http' => array(
-				'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
-				'method'  => 'POST',
-				'content' => http_build_query( $data ),
-			),
-		) );
+		if ( $type == "POST" ) {
+			$context = stream_context_create( array(
+				'http' => array(
+					'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
+					'method'  => "POST",
+					'content' => $query,
+				),
+			) );
 
-		if ( file_exists( $url ) ) {
-			$file = fopen( $url, 'rb', false, $context );
-			$response = stream_get_contents( $file );
+			error_log( "Requesting with type " . $type );
+			$file = @fopen( $url, 'rb', false, $context );
+
+			if ( $file ) {
+				$response = stream_get_contents( $file );
+			} else {
+				?>
+				<div class="notice notice-error">
+					<p>Could not contact server: <a href="<?php echo $url; ?>"><?php echo $url; ?></a></p>
+				</div>
+				<?php
+				$response = null;
+			}
 		} else {
-			?>
-			<div class="notice notice-error">
-				<p>Could not contact server: <a href="<?php echo $url; ?>"><?php echo $url; ?></a></p>
-			</div>
-			<?php
-			$response = null;
+			$response = file_get_contents( $url . "?" . $query );
 		}
 
 		return $response;
-	}
-}
+	}}
 
 add_action( 'init', array( 'Evaluate_Connector', 'init' ) );

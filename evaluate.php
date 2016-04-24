@@ -30,11 +30,16 @@ class Evaluate {
 	 * @filter plugins_loaded
 	 */
 	public static function load() {
+		// TODO: Move this to the 'includes' directory.
+		require_once( self::$directory_path . '/includes/class-evaluate-connector.php' );
+		require_once( self::$directory_path . '/includes/class-evaluate-settings.php' );
+
 		if ( self::meets_requirements() && is_admin() ) {
-			require_once( self::$directory_path . '/admin/class-evaluate-settings.php' );
-			require_once( self::$directory_path . '/admin/class-evaluate-admin.php' );
-			require_once( self::$directory_path . '/admin/class-evaluate-connector.php' );
-			require_once( self::$directory_path . '/admin/class-evaluate-shortcodes.php' );
+			require_once( self::$directory_path . '/admin/class-evaluate-manage.php' );
+			require_once( self::$directory_path . '/admin/class-evaluate-metrics.php' );
+			require_once( self::$directory_path . '/admin/class-evaluate-rubrics.php' );
+		} else {
+			require_once( self::$directory_path . '/public/class-evaluate-display.php' );
 		}
 	}
 
