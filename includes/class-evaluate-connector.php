@@ -89,18 +89,19 @@ class Evaluate_Connector {
 			<?php
 		} else {
 			?>
-			<iframe src="<?php echo $url; ?>" style="width: 100%; height: 400px;"></iframe>
+			<iframe src="<?php echo $url; ?>"></iframe>
 			<?php
 		}
 	}
 
 	public static function request( $path, $data, $type = "POST", $auth = false ) {
 		$url = Evaluate_Settings::get_settings( 'server' ) . $path;
-		$query = http_build_query( $data );
 
 		if ( $auth ) {
 			$data = array_merge( $data, self::get_launch_data( $url ) );
 		}
+
+		$query = http_build_query( $data );
 
 		if ( $type == "POST" ) {
 			$context = stream_context_create( array(
@@ -111,7 +112,6 @@ class Evaluate_Connector {
 				),
 			) );
 
-			error_log( "Requesting with type " . $type );
 			$file = @fopen( $url, 'rb', false, $context );
 
 			if ( $file ) {

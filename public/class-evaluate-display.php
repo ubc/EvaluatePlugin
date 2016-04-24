@@ -78,7 +78,6 @@ class Evaluate_Display {
 
 		foreach ( $usage_settings as $metric_id => $usage ) {
 			if ( in_array( $context['type'], $usage ) ) {
-				$content .= "Considering: " . print_r($metric_id, true) . "<br>";
 				$content .= self::render_metric( array(
 					'metric_id' => $metric_id,
 				) );
@@ -108,7 +107,6 @@ class Evaluate_Display {
 		$api_key = 'testapikey';
 
 		$data['context_id'] = empty( $data['context_id'] ) ? self::get_context()['id'] : $data['context_id'];
-		error_log( print_r( $data, true ) );
 		$transaction_id = Evaluate_Connector::request( "/api/auth/" . $api_key, $data, "GET" );
 		
 		if ( $transaction_id === false ) {
@@ -116,7 +114,6 @@ class Evaluate_Display {
 			return "ERROR ON EVALUATE AUTH REQUEST";
 		} else {
 			ob_start();
-			echo "Transaction ID: " . print_r($transaction_id, true) . "<br>";
 			Evaluate_Connector::print_frame( "/api/embed/" . $transaction_id );
 			return ob_get_clean();
 		}

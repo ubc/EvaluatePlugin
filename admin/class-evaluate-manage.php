@@ -49,6 +49,10 @@ class Evaluate_Manage {
 		add_settings_field( "evaluate_server", "Server", array( __CLASS__, 'render_server' ), self::$page_key, self::$section_key );
 		// TODO: Retrieve API Key automatically, using LTI and Server url.
 		add_settings_field( "evaluate_api_key", "API Key", array( __CLASS__, 'render_api_key' ), self::$page_key, self::$section_key );
+		add_settings_field( "evaluate_consumer_key", "Consumer Key", array( __CLASS__, 'render_consumer_key' ), self::$page_key, self::$section_key );
+		add_settings_field( "evaluate_consumer_secret", "Consumer Secret", array( __CLASS__, 'render_consumer_secret' ), self::$page_key, self::$section_key );
+		add_settings_field( "evaluate_stylesheet_url", "Stylesheet URL", array( __CLASS__, 'render_stylesheet_url' ), self::$page_key, self::$section_key );
+		add_settings_field( "evaluate_anonymous", "Anonymous Voters", array( __CLASS__, 'render_allow_anonymous' ), self::$page_key, self::$section_key );
 		add_settings_field( "evaluate_permissions", "Permissions", array( __CLASS__, 'render_permissions' ), self::$page_key, self::$section_key );
 	}
 
@@ -104,11 +108,39 @@ class Evaluate_Manage {
 		<?php
 	}
 
+	public static function render_consumer_key() {
+		$value = Evaluate_Settings::get_settings( 'consumer_key' );
+		?>
+		<input id="consumer_key" name="<?php echo Evaluate_Settings::$settings_key; ?>[consumer_key]" type="text" size="40" value="<?php echo $value; ?>"></input>
+		<?php
+	}
+
+	public static function render_consumer_secret() {
+		$value = Evaluate_Settings::get_settings( 'consumer_secret' );
+		?>
+		<input id="consumer_secret" name="<?php echo Evaluate_Settings::$settings_key; ?>[consumer_secret]" type="text" size="40" value="<?php echo $value; ?>"></input>
+		<?php
+	}
+
+	public static function render_stylesheet_url() {
+		$value = Evaluate_Settings::get_settings( 'stylesheet_url' );
+		?>
+		<input id="stylesheet_url" name="<?php echo Evaluate_Settings::$settings_key; ?>[stylesheet_url]" type="text" size="40" value="<?php echo $value; ?>"></input>
+		<?php
+	}
+
+	public static function render_allow_anonymous() {
+		$value = Evaluate_Settings::get_settings( 'allow_anonymous' );
+		?>
+		<input id="allow_anonymous" name="<?php echo Evaluate_Settings::$settings_key; ?>[allow_anonymous]" type="checkbox" value="on" <?php checked( $value, "on" ); ?>></input> Allowed By Default
+		<?php
+	}
+
 	public static function render_permissions() {
 		$roles = get_editable_roles();
 
 		?>
-		<table>
+		<table id="permissions">
 			<thead>
 				<tr>
 					<th></th>
@@ -147,6 +179,15 @@ class Evaluate_Manage {
 	}
 
 	public static function validate_settings( $input ) {
+		$result = shortcode_atts( array(
+			'server'          => "",
+			'api_key'         => "",
+			'consumer_key'    => "",
+			'consumer_secret' => "",
+			'stylesheet_url'  => "",
+			'allow_anonymous' => "",
+		), $input );
+
 		$result[ 'server' ] = untrailingslashit( trim( $input[ 'server' ] ) );
 
 		$permissions = empty ( $input['permissions'] ) ? array() : $input['permissions'];

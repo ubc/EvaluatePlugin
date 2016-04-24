@@ -24,11 +24,15 @@ table th {
 	padding: 0 10px;
 }
 
-table th:first-child {
+.form-table td {
+	height: 29px;
+}
+
+#permissions th:first-child {
 	text-align: left;
 	padding-left: 0;
 }
 
-table td {
+#permissions td {
 	text-align: center;
 }

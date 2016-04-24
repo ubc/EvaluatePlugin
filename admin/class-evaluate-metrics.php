@@ -51,16 +51,7 @@ class Evaluate_Metrics {
 	}
 
 	public static function ajax_set_usage() {
-		$metric_id = $_POST['metric_id'];
-		$usage = get_option( 'evaluate_usage', array() );
-
-		if ( empty( $_POST['usage'] ) ) {
-			unset( $usage[ $metric_id ] );
-		} else {
-			$usage[ $metric_id ] = $_POST['usage'];
-		}
-
-		update_option( 'evaluate_usage', $usage );
+		Evaluate_Settings::set_usage( $_POST['usage'], $_POST['metric_id'] );
 		echo 'success';
 		wp_die();
 	}
@@ -108,8 +99,6 @@ class Evaluate_Metrics {
 	}
 
 	private static function render_metric( $metric, $cases, $usage ) {
-		//$usage = get_option( self::get_metric_data_slug( $metric->metric_id ), array() );
-
 		?>
 		<form>
 			<strong class="title"><?php echo $metric->name; ?></strong>

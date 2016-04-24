@@ -11,7 +11,6 @@ class Evaluate_Settings {
 	public static $settings_key = 'evaluate_settings';
 	// Used to store metric usage
 	private static $usage_key = 'evaluate_usage';
-	
 
 	public static function set_usage( $data, $metric_id = null ) {
 		if ( ! empty( $metric_id ) ) {
