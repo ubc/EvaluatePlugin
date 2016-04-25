@@ -113,8 +113,15 @@ class Evaluate_Display {
 			// TODO: Handle Error
 			return "ERROR ON EVALUATE AUTH REQUEST";
 		} else {
+			$url = "/api/embed/" . $transaction_id;
+			$stylesheet_url = Evaluate_Settings::get_settings( 'stylesheet_url' );
+
+			if ( ! empty( $stylesheet_url ) ) {
+				$url .= "?" . http_build_query( array( 'stylesheet' => $stylesheet_url ) );
+			}
+
 			ob_start();
-			Evaluate_Connector::print_frame( "/api/embed/" . $transaction_id );
+			Evaluate_Connector::print_frame( $url );
 			return ob_get_clean();
 		}
 	}
