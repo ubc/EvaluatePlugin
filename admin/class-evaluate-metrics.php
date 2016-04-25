@@ -52,8 +52,15 @@ class Evaluate_Metrics {
 	}
 
 	public static function ajax_set_usage() {
-		Evaluate_Settings::set_usage( $_POST['usage'], $_POST['metric_id'] );
-		echo 'success';
+		$usage = empty( $_POST['usage'] ) ? null : $_POST['usage'];
+		$metric_id = empty( $_POST['metric_id'] ) ? null : $_POST['metric_id'];
+
+		if ( empty( $metric_id ) ) {
+			echo 'failure';
+		} else {
+			Evaluate_Settings::set_usage( $usage, $metric_id );
+			echo 'success';
+		}
 		wp_die();
 	}
 
@@ -128,6 +135,12 @@ class Evaluate_Metrics {
 			<div class="column">
 				<?php echo self::render_usage_cases( self::$special_cases, $usage ); ?>
 			</div>
+			<div>
+				<label>
+					Shortcode
+					<input class="shortcode-box" type="text" value="[evaluate metric='<?php echo $metric->metric_id; ?>']" <?php echo in_array( 'shortcodes', $usage ) ? '' : 'disabled="disabled"'; ?>></input>
+				</label>
+			</div>
 			<div class="actions">
 				<input type="hidden" name="action" value="evaluate_set_usage"></input>
 				<input type="hidden" name="metric_id" value="<?php echo $metric->metric_id; ?>"></input>
@@ -143,7 +156,7 @@ class Evaluate_Metrics {
 		foreach ( $cases as $slug => $text ) {
 			?>
 			<label>
-				<input type="checkbox" name="usage[<?php echo $slug; ?>]" value="<?php echo $slug; ?>" <?php checked( in_array( $slug, $usage ) ); ?>></input>
+				<input class="<?php echo $slug; ?>" type="checkbox" name="usage[<?php echo $slug; ?>]" value="<?php echo $slug; ?>" <?php checked( in_array( $slug, $usage ) ); ?>></input>
 				<?php echo $text; ?>
 			</label>
 			<br>

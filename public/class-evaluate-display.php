@@ -104,7 +104,6 @@ class Evaluate_Display {
 		}
 
 		$api_key = Evaluate_Settings::get_settings( 'api_key' );
-		$api_key = 'testapikey';
 
 		$data['context_id'] = empty( $data['context_id'] ) ? self::get_context()['id'] : $data['context_id'];
 		$transaction_id = Evaluate_Connector::request( "/api/auth/" . $api_key, $data, "GET" );

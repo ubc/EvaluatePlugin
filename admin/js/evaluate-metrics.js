@@ -17,12 +17,18 @@ jQuery(document).ready( function() {
 		jQuery.post( ajaxurl, data, function( response ) {
 			if ( response == 'success' ) {
 				button.val( "Saved" );
+
+				form.find('.shortcode-box').prop( "disabled", ! form.find('.shortcodes')[0].checked );
 			} else {
 				button.val( "Save" );
 				button.prop( "disabled", false );
 			}
 		} );
 	} );
+
+	jQuery('.shortcode-box').focus( function() {
+		jQuery(this).select();
+	} );
 } );
 
-console.log("Loaded evaluate-admin.js");
+console.log("Loaded evaluate-metrics.js");
