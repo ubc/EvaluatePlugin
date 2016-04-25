@@ -5,7 +5,6 @@
  * where administrators can fill out the information that this plugin asks for.
  */
 
-// TODO: Support Custom CSS
 class Evaluate_Manage {
 	// This slug is used for the admin page.
 	public static $page_key = 'evaluate';
@@ -41,7 +40,6 @@ class Evaluate_Manage {
 		wp_register_style( 'evaluate-manage', Evaluate::$directory_url . 'admin/css/evaluate-manage.css' );
 	}
 
-	// TODO: Add Consumer Key, Consumer Secret, Allow Anonymous, Stylesheet URL
 	public static function register_setting() {
 		register_setting( self::$section_key, Evaluate_Settings::$settings_key, array( __CLASS__, 'validate_settings' ) );
 		add_settings_section( self::$section_key, 'Settings', array( __CLASS__, 'render_settings_description' ), self::$page_key );
@@ -49,6 +47,7 @@ class Evaluate_Manage {
 		add_settings_field( "evaluate_server", "Server", array( __CLASS__, 'render_server' ), self::$page_key, self::$section_key );
 		// TODO: Retrieve API Key automatically, using LTI and Server url.
 		add_settings_field( "evaluate_api_key", "API Key", array( __CLASS__, 'render_api_key' ), self::$page_key, self::$section_key );
+		// TODO: These settings must be network admin only.
 		add_settings_field( "evaluate_consumer_key", "Consumer Key", array( __CLASS__, 'render_consumer_key' ), self::$page_key, self::$section_key );
 		add_settings_field( "evaluate_consumer_secret", "Consumer Secret", array( __CLASS__, 'render_consumer_secret' ), self::$page_key, self::$section_key );
 		add_settings_field( "evaluate_stylesheet_url", "Stylesheet URL", array( __CLASS__, 'render_stylesheet_url' ), self::$page_key, self::$section_key );

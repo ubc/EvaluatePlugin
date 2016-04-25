@@ -23,16 +23,21 @@ class Evaluate_Connector {
 		"launch_presentation_document_target" => "iframe",
 	);
 
+	private static $launch_url;
+
 	public static function init() {
 		self::$lti_key = "testconsumerkey";
 		self::$lti_secret = "testconsumersecret";
+		self::$launch_url = Evaluate_Settings::get_settings( 'server' ) . "/login";
 	}
 
-	private static function get_launch_data( $launch_url ) {
+	private static function get_launch_data( $target_path ) {
 		$now = new DateTime();
 		$launch_data = self::$launch_data;
 		$launch_data["lti_version"] = "LTI-1p0";
 		$launch_data["lti_message_type"] = "basic-lti-launch-request";
+
+		$launch_data["target_path"] = $target_path;
 
 		# Basic LTI uses OAuth to sign requests
 		# OAuth Core 1.0 spec: http://oauth.net/core/1.0/
@@ -53,7 +58,7 @@ class Evaluate_Connector {
 			array_push( $launch_params, $key . "=" . rawurlencode( $launch_data[ $key ] ) );
 		}
 
-		$base_string = "POST&" . urlencode( $launch_url ) . "&" . rawurlencode( implode( "&", $launch_params ) );
+		$base_string = "POST&" . urlencode( self::$launch_url ) . "&" . rawurlencode( implode( "&", $launch_params ) );
 		$secret = urlencode( self::$lti_secret ) . "&";
 		$launch_data['oauth_signature'] = base64_encode( hash_hmac( "sha1", $base_string, $secret, true ) );
 
@@ -61,14 +66,12 @@ class Evaluate_Connector {
 	}
 
 	public static function print_frame( $path, $auth = false ) {
-		$url = Evaluate_Settings::get_settings( 'server' ) . $path;
-
 		if ( $auth ) {
-			$launch_data = self::get_launch_data( $url );
+			$launch_data = self::get_launch_data( $path );
 
 			?>
 			<div id="ltiLaunchDiv">
-				<form id="ltiLaunchForm" target="ltiLaunch" method="POST" action="<?php echo $url; ?>">
+				<form id="ltiLaunchForm" target="ltiLaunch" method="POST" action="<?php echo self::$launch_url; ?>">
 					<?php
 					foreach ( $launch_data as $k => $v ) {
 						?>
@@ -88,6 +91,8 @@ class Evaluate_Connector {
 			<iframe name="ltiLaunch" src="" style="width: 100%; height: 400px;"></iframe>
 			<?php
 		} else {
+			$url = Evaluate_Settings::get_settings( 'server' ) . $path;
+			
 			?>
 			<iframe src="<?php echo $url; ?>"></iframe>
 			<?php
@@ -98,7 +103,7 @@ class Evaluate_Connector {
 		$url = Evaluate_Settings::get_settings( 'server' ) . $path;
 
 		if ( $auth ) {
-			$data = array_merge( $data, self::get_launch_data( $url ) );
+			$data = array_merge( $data, self::get_launch_data( $path ) );
 		}
 
 		$query = http_build_query( $data );
@@ -112,7 +117,7 @@ class Evaluate_Connector {
 				),
 			) );
 
-			$file = @fopen( $url, 'rb', false, $context );
+			$file = @fopen( self::$launch_url, 'rb', false, $context );
 
 			if ( $file ) {
 				$response = stream_get_contents( $file );
@@ -125,7 +130,7 @@ class Evaluate_Connector {
 				$response = null;
 			}
 		} else {
-			$response = file_get_contents( $url . "?" . $query );
+			$response = @file_get_contents( $url . "?" . $query );
 		}
 
 		return $response;

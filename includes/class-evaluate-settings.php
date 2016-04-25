@@ -5,7 +5,6 @@
  * where administrators can fill out the information that this plugin asks for.
  */
 
-// TODO: Support Custom CSS
 class Evaluate_Settings {
 	// Used to store our plugin settings
 	public static $settings_key = 'evaluate_settings';

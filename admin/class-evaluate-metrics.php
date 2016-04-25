@@ -35,6 +35,7 @@ class Evaluate_Metrics {
 		wp_register_style( 'evaluate-metrics', Evaluate::$directory_url . 'admin/css/evaluate-metrics.css' );
 		wp_register_script( 'evaluate-metrics', Evaluate::$directory_url . 'admin/js/evaluate-metrics.js', array( 'jquery' ) );
 	}
+
 	/**
 	 * Define the admin pages.
 	 * @filter network_admin_menu
@@ -60,38 +61,47 @@ class Evaluate_Metrics {
 	 * Render the metrics page.
 	 */
 	public static function render_page() {
-		wp_enqueue_style( 'evaluate-metrics' );
-		wp_enqueue_script( 'evaluate-metrics' );
-
-		$metrics = Evaluate_Connector::request( "/metrics/list", array(), "POST", true );
-		$metrics = json_decode( $metrics );
-
-		$usage = get_option( 'evaluate_usage', array() );
-
-		$cases = array();
-		foreach ( get_post_types( array( 'public' => true, ), 'objects' ) as $slug => $object ) {
-			$cases[ $slug ] = "Visible on " . $object->labels->name;
-		}
-
 		?>
 		<div class="wrap">
-			<h1>
-				Manage Metrics
-				<a href="test" class="page-title-action">Add New</a>
-			</h1>
 			<?php
-			if ( empty( $metrics ) ) {
-				?>
-				<div class="notice notice-warning">
-					<p>No Metrics Received from the Server.</p>
-				</div>
-				<?php
-			} else {
-				foreach ( $metrics as $index => $metric ) {
-					$metric_usage = empty ( $usage[ $metric->metric_id ] ) ? array() : $usage[ $metric->metric_id ];
+			if ( empty( $_GET['metric_id'] ) ) {
+				wp_enqueue_style( 'evaluate-metrics' );
+				wp_enqueue_script( 'evaluate-metrics' );
 
-					self::render_metric( $metric, $cases, $metric_usage );
+				$metrics = Evaluate_Connector::request( "/metrics/list", array(), "POST", true );
+				$metrics = json_decode( $metrics );
+
+				$usage = get_option( 'evaluate_usage', array() );
+
+				$cases = array();
+				foreach ( get_post_types( array( 'public' => true, ), 'objects' ) as $slug => $object ) {
+					$cases[ $slug ] = "Visible on " . $object->labels->name;
 				}
+
+				?>
+				<h1>
+					Manage Metrics
+					<a href="test" class="page-title-action">Add New</a>
+				</h1>
+				<?php
+				if ( empty( $metrics ) ) {
+					?>
+					<div class="notice notice-warning">
+						<p>No Metrics Received from the Server.</p>
+					</div>
+					<?php
+				} else {
+					foreach ( $metrics as $index => $metric ) {
+						$metric_usage = empty ( $usage[ $metric->metric_id ] ) ? array() : $usage[ $metric->metric_id ];
+						self::render_metric( $metric, $cases, $metric_usage );
+					}
+				}
+			} else {
+				?>
+				<h1>Edit Metric</h1>
+				<?php
+				echo "/metrics/edit/" . $_GET['metric_id'];
+				Evaluate_Connector::print_frame( "/metrics/edit/" . $_GET['metric_id'], true );
 			}
 			?>
 		</div>
@@ -122,7 +132,7 @@ class Evaluate_Metrics {
 				<input type="hidden" name="action" value="evaluate_set_usage"></input>
 				<input type="hidden" name="metric_id" value="<?php echo $metric->metric_id; ?>"></input>
 				<input type="button" class="save-button button button-primary" disabled="disabled" value="Saved"></input>
-				<input type="button" class="edit-button button" value="Edit Metric"></input>
+				<a href="?page=<?php echo self::$page_key; ?>&metric_id=<?php echo $metric->metric_id; ?>" class="edit-button button">Edit Metric</a>
 			</div>
 			<br class="clear">
 		</form>
