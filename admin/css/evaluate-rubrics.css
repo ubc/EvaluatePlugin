@@ -1,0 +1,11 @@
+
+.wrap {
+	padding-right: 20px;
+}
+
+.wrap li {
+	width: 100%;
+	border-top: 1px solid lightgray;
+	border-left: 4px solid lightblue;
+	padding: 0.25em 0.5em;
+}

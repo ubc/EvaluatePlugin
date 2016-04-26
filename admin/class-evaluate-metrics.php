@@ -21,13 +21,10 @@ class Evaluate_Metrics {
 	 */
 	public static function init() {
 		add_action( 'wp_ajax_evaluate_set_usage', array( __CLASS__, 'ajax_set_usage' ) );
+		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'register_scripts_and_styles' ), 5 );
 
 		if ( current_user_can( 'evaluate_display' ) || current_user_can( 'evaluate_metrics' ) ) {
 			add_action( 'admin_menu', array( __CLASS__, 'add_page' ) );
-		}
-
-		if ( isset( $_GET['page'] ) && $_GET['page'] == self::$page_key ) {
-			add_action( 'admin_enqueue_scripts', array( __CLASS__, 'register_scripts_and_styles' ), 5 );
 		}
 	}
 
@@ -73,7 +70,10 @@ class Evaluate_Metrics {
 			<?php
 			if ( isset( $_GET['metric_id'] ) ) {
 				?>
-				<h1><?php echo empty( $_GET['metric_id'] ) ? "Create" : "Edit"; ?> Metric</h1>
+				<h1>
+					<?php echo empty( $_GET['metric_id'] ) ? "Create" : "Edit"; ?> Metric
+					<a href="?page=<?php echo self::$page_key; ?>" class="page-title-action">Go Back</a>
+				</h1>
 				<?php
 				Evaluate_Connector::print_frame( "/metrics/edit", array(
 					'metric_id' => $_GET['metric_id'],
@@ -95,7 +95,7 @@ class Evaluate_Metrics {
 				?>
 				<h1>
 					Manage Metrics
-					<a href="?page=<?php echo self::$page_key; ?>&metric_id=" class="page-title-action">Add New</a>
+					<a href="?page=<?php echo self::$page_key; ?>&metric_id" class="page-title-action">Add New</a>
 				</h1>
 				<?php
 				if ( empty( $metrics ) ) {
@@ -105,10 +105,16 @@ class Evaluate_Metrics {
 					</div>
 					<?php
 				} else {
-					foreach ( $metrics as $index => $metric ) {
-						$metric_usage = empty ( $usage[ $metric->metric_id ] ) ? array() : $usage[ $metric->metric_id ];
-						self::render_metric( $metric, $cases, $metric_usage );
-					}
+					?>
+					<ul>
+						<?php
+						foreach ( $metrics as $index => $metric ) {
+							$metric_usage = empty ( $usage[ $metric->metric_id ] ) ? array() : $usage[ $metric->metric_id ];
+							self::render_metric( $metric, $cases, $metric_usage );
+						}
+						?>
+					</ul>
+					<?php
 				}
 			}
 			?>
@@ -118,38 +124,39 @@ class Evaluate_Metrics {
 
 	private static function render_metric( $metric, $cases, $usage ) {
 		?>
-		<form>
-			<strong class="title"><?php echo $metric->name; ?></strong>
-			<details>
-				<summary>Attributes</summary>
-				<pre><?php
-					echo "type: \"" . $metric->type->title . "\"\r\n";
-					foreach ( $metric->options as $key => $value ) {
-						echo $key . ": " . json_encode( $value ) . "\r\n";
-					}
-				?></pre>
-			</details>
-			<hr>
-			<div class="column">
-				<?php echo self::render_usage_cases( $cases, $usage ); ?>
-			</div>
-			<div class="column">
-				<?php echo self::render_usage_cases( self::$special_cases, $usage ); ?>
-			</div>
-			<div>
-				<label>
-					Shortcode
-					<input class="shortcode-box" type="text" value="[evaluate metric='<?php echo $metric->metric_id; ?>']" <?php echo in_array( 'shortcodes', $usage ) ? '' : 'disabled="disabled"'; ?>></input>
-				</label>
-			</div>
-			<div class="actions">
-				<input type="hidden" name="action" value="evaluate_set_usage"></input>
-				<input type="hidden" name="metric_id" value="<?php echo $metric->metric_id; ?>"></input>
-				<input type="button" class="save-button button button-primary" disabled="disabled" value="Saved"></input>
-				<a href="?page=<?php echo self::$page_key; ?>&metric_id=<?php echo $metric->metric_id; ?>" class="edit-button button">Edit Metric</a>
-			</div>
-			<br class="clear">
-		</form>
+		<li>
+			<form>
+				<strong class="title"><?php echo $metric->name; ?></strong>
+				<details>
+					<summary>Attributes</summary>
+					<pre><?php
+						echo "type: \"" . $metric->type->title . "\"\r\n";
+						foreach ( $metric->options as $key => $value ) {
+							echo $key . ": " . json_encode( $value ) . "\r\n";
+						}
+					?></pre>
+				</details>
+				<div class="column">
+					<?php echo self::render_usage_cases( $cases, $usage ); ?>
+				</div>
+				<div class="column">
+					<?php echo self::render_usage_cases( self::$special_cases, $usage ); ?>
+				</div>
+				<div>
+					<label>
+						Shortcode
+						<input class="shortcode-box" type="text" value="[evaluate metric='<?php echo $metric->metric_id; ?>']" <?php echo in_array( 'shortcodes', $usage ) ? '' : 'disabled="disabled"'; ?>></input>
+					</label>
+				</div>
+				<div class="actions">
+					<input type="hidden" name="action" value="evaluate_set_usage"></input>
+					<input type="hidden" name="metric_id" value="<?php echo $metric->metric_id; ?>"></input>
+					<input type="button" class="save-button button button-primary" disabled="disabled" value="Saved"></input>
+					<a href="?page=<?php echo self::$page_key; ?>&metric_id=<?php echo $metric->metric_id; ?>" class="edit-button button">Edit Metric</a>
+				</div>
+				<br class="clear">
+			</form>
+		</li>
 		<?php
 	}
 

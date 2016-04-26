@@ -26,10 +26,7 @@ class Evaluate_Manage {
 	public static function init() {
 		add_action( 'admin_menu', array( __CLASS__, 'add_page' ) );
 		add_action( 'admin_init', array( __CLASS__, 'register_settings' ) );
-
-		if ( isset( $_GET['page'] ) && $_GET['page'] == self::$page_key ) {
-			add_action( 'admin_enqueue_scripts', array( __CLASS__, 'register_scripts_and_styles' ), 5 );
-		}
+		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'register_scripts_and_styles' ), 5 );
 	}
 
 	/**
@@ -81,7 +78,7 @@ class Evaluate_Manage {
 
 		?>
 		<div class="wrap">
-			<h2>Evaluate</h2>
+			<h2>Evaluate Settings</h2>
 			<form method="post" action="options.php">
 				<?php
 				settings_fields( self::$page_key );

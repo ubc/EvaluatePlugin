@@ -12,9 +12,15 @@ class Evaluate_Rubrics {
 	 * @filter init
 	 */
 	public static function init() {
+		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'register_scripts_and_styles' ), 5 );
+
 		if ( current_user_can( 'evaluate_rubrics' ) ) {
 			add_action( 'admin_menu', array( __CLASS__, 'add_page' ) );
 		}
+	}
+
+	public static function register_scripts_and_styles() {
+		wp_register_style( 'evaluate-rubrics', Evaluate::$directory_url . 'admin/css/evaluate-rubrics.css' );
 	}
 
 	/**
@@ -37,9 +43,59 @@ class Evaluate_Rubrics {
 	 */
 	public static function render_page() {
 		?>
-		<h1>Manage Rubrics</h1>
+		<div class="wrap">
+			<?php
+			if ( isset( $_GET['blueprint_id'] ) ) {
+				?>
+				<h1>
+					<?php echo empty( $_GET['blueprint_id'] ) ? "Create" : "Edit"; ?> Rubric
+					<a href="?page=<?php echo self::$page_key; ?>" class="page-title-action">Go Back</a>
+				</h1>
+				<?php
+				Evaluate_Connector::print_frame( "/blueprints/edit", array(
+					'blueprint_id' => $_GET['blueprint_id'],
+				) );
+			} else {
+				wp_enqueue_style( 'evaluate-rubrics' );
+				$blueprints = Evaluate_Connector::get_data( "/blueprints/list" );
+				$blueprints = json_decode( $blueprints );
+
+				?>
+				<h1>
+					Manage Rubrics
+					<a href="?page=<?php echo self::$page_key; ?>&blueprint_id" class="page-title-action">Add Rubric</a>
+				</h1>
+				<?php
+				if ( empty( $blueprints ) ) {
+					?>
+					<div class="notice notice-warning">
+						<p>No Blueprints Received from the Server.</p>
+					</div>
+					<?php
+				} else {
+					?>
+					<ul>
+						<?php
+						foreach ( $blueprints as $index => $blueprint ) {
+							self::render_blueprint( $blueprint );
+						}
+						?>
+					</ul>
+					<?php
+				}
+			}
+			?>
+		</div>
 		<?php
-		print_r( Evaluate_Connector::get_data( "/blueprints/list" ) );
+	}
+
+	private static function render_blueprint( $blueprint ) {
+		?>
+		<li>
+			<strong class="title"><?php echo $blueprint->name; ?></strong> <a href="?page=<?php echo self::$page_key; ?>&blueprint_id=<?php echo $blueprint->blueprint_id; ?>">[Edit]</a>
+			<div><?php echo $blueprint->description; ?></div>
+		</li>
+		<?php
 	}
 
 }

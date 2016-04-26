@@ -1,7 +1,16 @@
 
+.wrap {
+	padding-right: 20px;
+}
+
+.wrap li {
+	width: 100%;
+	border-top: 1px solid lightgray;
+	border-left: 4px solid lightblue;
+	padding: 0.25em 0.5em;
+}
+
 form {
-	border-bottom: 4px solid lightgray;
-	margin-bottom: 1em;
 	position: relative;
 	clear: both;
 	max-width: 100%;
@@ -18,6 +27,7 @@ form .title {
 
 form .actions {
 	float: left;
+	margin-top: 0.25em;
 }
 
 form .column {
