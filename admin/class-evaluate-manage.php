@@ -42,16 +42,19 @@ class Evaluate_Manage {
 
 	public static function register_settings() {
 		add_settings_section( self::$section_key, 'Settings', array( __CLASS__, 'render_settings_description' ), self::$page_key );
-		add_settings_field( "evaluate_server", "Server", array( __CLASS__, 'render_field' ), self::$page_key, self::$section_key, 'server' );
-		add_settings_field( "evaluate_api_key", "API Key", array( __CLASS__, 'render_field' ), self::$page_key, self::$section_key, 'api_key' );
+
+		if ( is_super_admin() ) {
+			add_settings_field( "evaluate_network_toggle", "Network Wide", array( __CLASS__, 'render_network_toggle' ), self::$page_key, self::$section_key );
+		}
+
+		if ( Evaluate_Settings::get_network_settings( 'network_toggle' ) != "on" || is_super_admin() ) {
+			add_settings_field( "evaluate_server", "Server", array( __CLASS__, 'render_field' ), self::$page_key, self::$section_key, 'server' );
+			add_settings_field( "evaluate_api_key", "API Key", array( __CLASS__, 'render_field' ), self::$page_key, self::$section_key, 'api_key' );
+		}
+
 		add_settings_field( "evaluate_stylesheet_url", "Stylesheet URL", array( __CLASS__, 'render_field' ), self::$page_key, self::$section_key, 'stylesheet_url' );
 		add_settings_field( "evaluate_anonymous", "Anonymous Voters", array( __CLASS__, 'render_allow_anonymous' ), self::$page_key, self::$section_key );
 		add_settings_field( "evaluate_permissions", "Permissions", array( __CLASS__, 'render_permissions' ), self::$page_key, self::$section_key );
-
-		if ( is_super_admin() ) {
-			add_settings_field( "evaluate_consumer_key", "LTI Consumer Key", array( __CLASS__, 'render_network_field' ), self::$page_key, self::$section_key, 'consumer_key' );
-			add_settings_field( "evaluate_consumer_secret", "LTI Consumer Secret", array( __CLASS__, 'render_network_field' ), self::$page_key, self::$section_key, 'consumer_secret' );
-		}
 
 		register_setting( self::$page_key, Evaluate_Settings::$settings_key, array( __CLASS__, 'validate_settings' ) );
 	}
@@ -108,18 +111,23 @@ class Evaluate_Manage {
 		<?php
 	}
 
-	public static function render_network_field( $slug ) {
-		$value = Evaluate_Settings::get_network_settings( $slug );
-		?>
-		<input id="<?php echo $slug; ?>" name="<?php echo Evaluate_Settings::$settings_key . '[' . $slug . ']'; ?>" type="text" size="40" value="<?php echo $value; ?>"></input>
-		<em>This is a network-wide setting.</em>
-		<?php
-	}
-
 	public static function render_allow_anonymous() {
 		$value = Evaluate_Settings::get_settings( 'allow_anonymous' );
 		?>
-		<input id="allow_anonymous" name="<?php echo Evaluate_Settings::$settings_key; ?>[allow_anonymous]" type="checkbox" value="on" <?php checked( $value, "on" ); ?>></input> Allowed By Default
+		<label>
+			<input id="allow_anonymous" name="<?php echo Evaluate_Settings::$settings_key; ?>[allow_anonymous]" type="checkbox" value="on" <?php checked( $value, "on" ); ?>></input> Allowed By Default
+		</label>
+		<?php
+	}
+
+	public static function render_network_toggle() {
+		$value = Evaluate_Settings::get_network_settings( 'network_toggle' );
+		?>
+		<label>
+			<input id="network_toggle" name="<?php echo Evaluate_Settings::$settings_key; ?>[network_toggle]" type="checkbox" value="on" <?php checked( $value, "on" ); ?>></input> Server and API Key will be identical network-wide.
+		</label>
+		<br>
+		<small><em>This setting can only be controlled by Network Administrators. If enabled, the Server and API Key settings will also be restricted to network administrators.</em></small>
 		<?php
 	}
 
@@ -180,15 +188,18 @@ class Evaluate_Manage {
 
 		if ( is_super_admin() ) {
 			$network = shortcode_atts( array(
-				'consumer_key'    => "",
-				'consumer_secret' => "",
+				'network_toggle' => "",
 			), $input );
 
-			error_log("Net Saving " . print_r($network, true));
+			if ( $network['network_toggle'] == 'on' ) {
+				$network['server'] = $input['server'];
+				$network['api_key'] = $input['api_key'];
+			}
+
 			update_site_option( Evaluate_Settings::$network_settings_key, $network );
 		}
 
-		error_log("Local Saving " . print_r($result, true));
+		error_log( "Local Saving " . print_r( $result, true ) );
 
 		return $result;
 	}

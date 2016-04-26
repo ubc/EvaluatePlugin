@@ -78,18 +78,16 @@ class Evaluate_Display {
 
 		foreach ( $usage_settings as $metric_id => $usage ) {
 			if ( in_array( $context['type'], $usage ) ) {
-				$content .= self::render_metric( array(
-					'metric_id' => $metric_id,
-				) );
+				$content .= self::render_metric( $metric_id );
 			}
 		}
 
 		return $content;	
 	}
 
-	public static function render_metric( $data ) {
-		$data['user_id'] = self::get_user_id();
-		$usage = self::get_usage_settings( $data['metric_id'] );
+	public static function render_metric( $metric_id, $context_id = null ) {
+		$user_id = self::get_user_id();
+		$usage = self::get_usage_settings( $metric_id );
 
 		if ( self::$is_user_anonymous && ! in_array( 'anonymous', $usage ) ) {
 			return "anon<br>";
@@ -99,30 +97,24 @@ class Evaluate_Display {
 			return "admin<br>";
 		}
 
-		if ( empty( $data['metric_id'] ) ) {
+		if ( empty( $metric_id ) ) {
 			return 'no ID<br>';
 		}
 
-		$api_key = Evaluate_Settings::get_settings( 'api_key' );
-
-		$data['context_id'] = empty( $data['context_id'] ) ? self::get_context()['id'] : $data['context_id'];
-		$transaction_id = Evaluate_Connector::request( "/api/auth/" . $api_key, $data, "GET" );
-		
-		if ( $transaction_id === false ) {
-			// TODO: Handle Error
-			return "ERROR ON EVALUATE AUTH REQUEST";
-		} else {
-			$url = "/api/embed/" . $transaction_id;
-			$stylesheet_url = Evaluate_Settings::get_settings( 'stylesheet_url' );
-
-			if ( ! empty( $stylesheet_url ) ) {
-				$url .= "?" . http_build_query( array( 'stylesheet' => $stylesheet_url ) );
-			}
-
-			ob_start();
-			Evaluate_Connector::print_frame( $url );
-			return ob_get_clean();
+		if ( empty( $context_id ) ) {
+			$context_id = self::get_context()['id'];
 		}
+
+		ob_start();
+
+		Evaluate_Connector::print_frame( "/embed", array(
+			'metric_id'  => $metric_id,
+			'user_id'    => $user_id,
+			'context_id' => $context_id,
+			'stylesheet' => Evaluate_Settings::get_settings( 'stylesheet_url' ),
+		) );
+
+		return ob_get_clean();
 	}
 
 	public static function shortcode( $atts ) {
@@ -155,10 +147,7 @@ class Evaluate_Display {
 		if ( ! empty( $error ) ) {
 			return current_user_can( 'evaluate_display' ) ? $error : "";
 		} else {
-			return self::render_metric( array(
-				'metric_id'  => $atts['metric'],
-				'context_id' => $atts['context'],
-			) );
+			return self::render_metric( $atts['metric'], $atts['context'] );
 		}
 	}
 

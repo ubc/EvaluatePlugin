@@ -39,7 +39,7 @@ class Evaluate_Rubrics {
 		?>
 		<h1>Manage Rubrics</h1>
 		<?php
-		Evaluate_Connector::print_frame( "/blueprints", true );
+		print_r( Evaluate_Connector::get_data( "/blueprints/list" ) );
 	}
 
 }

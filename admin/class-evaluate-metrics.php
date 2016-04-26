@@ -71,11 +71,18 @@ class Evaluate_Metrics {
 		?>
 		<div class="wrap">
 			<?php
-			if ( empty( $_GET['metric_id'] ) ) {
+			if ( isset( $_GET['metric_id'] ) ) {
+				?>
+				<h1><?php echo empty( $_GET['metric_id'] ) ? "Create" : "Edit"; ?> Metric</h1>
+				<?php
+				Evaluate_Connector::print_frame( "/metrics/edit", array(
+					'metric_id' => $_GET['metric_id'],
+				) );
+			} else {
 				wp_enqueue_style( 'evaluate-metrics' );
 				wp_enqueue_script( 'evaluate-metrics' );
 
-				$metrics = Evaluate_Connector::request( "/metrics/list", array(), "POST", true );
+				$metrics = Evaluate_Connector::get_data( "/metrics/list" );
 				$metrics = json_decode( $metrics );
 
 				$usage = get_option( 'evaluate_usage', array() );
@@ -88,7 +95,7 @@ class Evaluate_Metrics {
 				?>
 				<h1>
 					Manage Metrics
-					<a href="test" class="page-title-action">Add New</a>
+					<a href="?page=<?php echo self::$page_key; ?>&metric_id=" class="page-title-action">Add New</a>
 				</h1>
 				<?php
 				if ( empty( $metrics ) ) {
@@ -103,12 +110,6 @@ class Evaluate_Metrics {
 						self::render_metric( $metric, $cases, $metric_usage );
 					}
 				}
-			} else {
-				?>
-				<h1>Edit Metric</h1>
-				<?php
-				echo "/metrics/edit/" . $_GET['metric_id'];
-				Evaluate_Connector::print_frame( "/metrics/edit/" . $_GET['metric_id'], true );
 			}
 			?>
 		</div>

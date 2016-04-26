@@ -39,12 +39,16 @@ class Evaluate_Settings {
 	}
 
 	public static function get_settings( $slug = null, $default = "" ) {
-		$settings = get_option( self::$settings_key, array() );
-
-		if ( empty( $slug ) ) {
-			return $settings;
+		if ( ( $slug == 'server' || $slug == 'api_key' ) && self::get_network_settings( 'network_toggle') == 'on' ) {
+			return self::get_network_settings( $slug );
 		} else {
-			return empty( $settings[ $slug ] ) ? $default : $settings[ $slug ];
+			$settings = get_option( self::$settings_key, array() );
+
+			if ( empty( $slug ) ) {
+				return $settings;
+			} else {
+				return empty( $settings[ $slug ] ) ? $default : $settings[ $slug ];
+			}
 		}
 	}
 
