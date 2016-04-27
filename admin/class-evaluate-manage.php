@@ -65,6 +65,14 @@ class Evaluate_Manage {
 			"Evaluate", // Page title
 			"Evaluate", // Menu title
 			self::$required_capability, // Capability required to view this page.
+			self::$page_key // Page slug
+		);
+
+		add_submenu_page(
+			self::$page_key,
+			"Evaluate Settings", // Page title
+			"Settings", // Menu title
+			self::$required_capability, // Capability required to view this page.
 			self::$page_key, // Page slug
 			array( __CLASS__, 'render_page' )
 		);

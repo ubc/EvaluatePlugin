@@ -30,7 +30,7 @@ class Evaluate_Rubrics {
 	public static function add_page() {
 		add_submenu_page(
 			Evaluate_Manage::$page_key, // Parent slug
-			"Rubrics", // Page title
+			"Evaluate Rubrics", // Page title
 			"Manage Rubrics", // Menu title
 			Evaluate_Manage::$required_capability, // Capability required to view this page.
 			self::$page_key, // Page slug

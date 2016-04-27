@@ -38,6 +38,7 @@ class Evaluate {
 			require_once( self::$directory_path . '/admin/class-evaluate-manage.php' );
 			require_once( self::$directory_path . '/admin/class-evaluate-metrics.php' );
 			require_once( self::$directory_path . '/admin/class-evaluate-rubrics.php' );
+			require_once( self::$directory_path . '/admin/class-evaluate-data.php' );
 		} else {
 			require_once( self::$directory_path . '/public/class-evaluate-display.php' );
 		}
