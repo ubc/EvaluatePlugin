@@ -6,7 +6,6 @@
 class Evaluate_Display {
 
 	private static $usage_settings = false;
-	private static $is_user_anonymous = null;
 	private static $user_id = false;
 	private static $context = false;
 	
@@ -33,39 +32,45 @@ class Evaluate_Display {
 
 	public static function get_user_id() {
 		if ( self::$user_id === false ) {
-			self::$user_id = get_current_user_id();
-			self::$is_user_anonymous = empty( self::$user_id );
-
-			if ( empty( self::$user_id ) ) {
-				if ( ! empty( $_SERVER['HTTP_CLIENT_IP'] ) ) {
-					//check ip from share internet
-					self::$user_id = $_SERVER['HTTP_CLIENT_IP'];
-				} elseif ( ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
-					//to check ip is pass from proxy
-					self::$user_id = $_SERVER['HTTP_X_FORWARDED_FOR'];
-				} else {
-					self::$user_id = $_SERVER['REMOTE_ADDR'];
-				}
+			if ( is_user_logged_in() ) {
+				self::$user_id = get_current_user_id();
+			} else if ( ! empty( $_SERVER['HTTP_CLIENT_IP'] ) ) {
+				//check ip from share internet
+				self::$user_id = $_SERVER['HTTP_CLIENT_IP'];
+			} else if ( ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
+				//to check ip is pass from proxy
+				self::$user_id = $_SERVER['HTTP_X_FORWARDED_FOR'];
+			} else {
+				self::$user_id = $_SERVER['REMOTE_ADDR'];
 			}
 		}
 
 		return self::$user_id;
 	}
 
-	public static function get_context() {
+	public static function get_context( $force_type = null, $force_id = null ) {
 		if ( self::$context === false ) {
-			if ( 'comment_text' === current_filter() ) {
-				// TODO: Support the 'comments_attached' usage setting.
-				$context_type = 'comments';
-				$context_id = get_comment_ID();
+			if ( ( 'comment_text' === current_filter() && $force_type == null ) || $force_type == 'comment' ) {
+				// TODO: Support the 'comment_attached' usage setting.
+				$id    = empty( $force_id ) ? get_comment_ID() : $force_id;
+				$type  = 'comment';
+				$title = get_comment( $id )->comment_author . "'s comment";
+				$url   = get_comment_link();
+			} else if ( ( 'the_content' === current_filter() && $force_type == null ) || $force_type == 'post' ) {
+				$id    = empty( $force_id ) ? get_the_ID() : $force_id;
+				$type  = get_post_type( $id );
+				$title = get_the_title( $id );
+				$url   = get_the_permalink( $id );
 			} else {
-				$context_type = get_post_type();
-				$context_id = get_the_ID();
+				$type  = empty( $force_type ) ? 'webpage' : $force_type;
+				$title = wp_title( "", false );
+				$url   = empty( $force_id ) ? $_SERVER["HTTP_HOST"] . $_SERVER["REQUEST_URI"] : $force_id;
 			}
 
 			self::$context = apply_filters( 'evaluate_get_context', array(
-				'type' => $context_type,
-				'id'   => $context_id,
+				'type'  => $type,
+				'title' => $title,
+				'url'   => $url,
 			) );
 		}
 
@@ -78,18 +83,18 @@ class Evaluate_Display {
 
 		foreach ( $usage_settings as $metric_id => $usage ) {
 			if ( in_array( $context['type'], $usage ) ) {
-				$content .= self::render_metric( $metric_id );
+				$content .= self::render_metric( $metric_id, $context );
 			}
 		}
 
 		return $content;	
 	}
 
-	public static function render_metric( $metric_id, $context_id = null ) {
+	public static function render_metric( $metric_id, $context ) {
 		$user_id = self::get_user_id();
 		$usage = self::get_usage_settings( $metric_id );
 
-		if ( self::$is_user_anonymous && ! in_array( 'anonymous', $usage ) ) {
+		if ( ! is_user_logged_in() && ! in_array( 'anonymous', $usage ) ) {
 			return "anon<br>";
 		}
 
@@ -101,17 +106,19 @@ class Evaluate_Display {
 			return 'no ID<br>';
 		}
 
-		if ( empty( $context_id ) ) {
-			$context_id = self::get_context()['id'];
-		}
-
 		ob_start();
 
 		Evaluate_Connector::print_frame( "/embed", array(
 			'metric_id'  => $metric_id,
 			'user_id'    => $user_id,
-			'context_id' => $context_id,
+			'context_id' => $context['url'],
 			'stylesheet' => Evaluate_Settings::get_settings( 'stylesheet_url' ),
+			'lrs'        => array(
+				'username' => is_user_logged_in() ? wp_get_current_user()->display_name : $user_id,
+				'homeurl'  => get_site_url(),
+				'activity_name' => $context['title'],
+				'activity_description' => $context['type'],
+			),
 		) );
 
 		return ob_get_clean();
@@ -120,6 +127,7 @@ class Evaluate_Display {
 	public static function shortcode( $atts ) {
 		$atts = shortcode_atts( array(
 			'metric'  => null,
+			'type'    => null,
 			'context' => null,
 		), $atts, 'evaluate' );
 
@@ -147,7 +155,8 @@ class Evaluate_Display {
 		if ( ! empty( $error ) ) {
 			return current_user_can( 'evaluate_display' ) ? $error : "";
 		} else {
-			return self::render_metric( $atts['metric'], $atts['context'] );
+			$context = self::get_context( $atts['type'], $atts['context'] );
+			return self::render_metric( $atts['metric'], $context );
 		}
 	}
 

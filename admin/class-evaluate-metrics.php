@@ -12,8 +12,8 @@ class Evaluate_Metrics {
 		'shortcodes' => "Available as a shortcode",
 		'anonymous' => "Allow anonymous voters",
 		'admins_only' => "Only visible to admins",
-		'comments' => "Visible on Comments",
-		'comments_attached' => "Attached to Comments [i]",
+		'comment' => "Visible on Comments",
+		'comment_attached' => "Attached to Comments [i]",
 	);
 
 	/**
