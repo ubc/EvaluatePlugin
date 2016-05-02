@@ -13,10 +13,12 @@ class Evaluate_Manage {
 	// The capability that a user needs to edit the form.
 	public static $required_capability = 'manage_options';
 
+	// TODO: Make sure permissions are appropriately enforced.
 	private static $permissions = array(
 		'evaluate_display' => "Display Metrics",
 		'evaluate_metrics' => "Edit Metrics",
 		'evaluate_rubrics' => "Manage Rubrics",
+		'evaluate_vote' => "Vote",
 		'evaluate_vote_everywhere' => "See Admin Only Metrics",
 	);
 
