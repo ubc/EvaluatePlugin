@@ -15,10 +15,10 @@ class Evaluate_Manage {
 
 	// TODO: Make sure permissions are appropriately enforced.
 	private static $permissions = array(
+		'evaluate_vote' => "Vote",
 		'evaluate_display' => "Display Metrics",
 		'evaluate_metrics' => "Edit Metrics",
 		'evaluate_rubrics' => "Manage Rubrics",
-		'evaluate_vote' => "Vote",
 		'evaluate_vote_everywhere' => "See Admin Only Metrics",
 	);
 
@@ -52,7 +52,6 @@ class Evaluate_Manage {
 		}
 
 		add_settings_field( "evaluate_stylesheet_url", "Stylesheet URL", array( __CLASS__, 'render_field' ), self::$page_key, self::$section_key, 'stylesheet_url' );
-		add_settings_field( "evaluate_anonymous", "Anonymous Voters", array( __CLASS__, 'render_allow_anonymous' ), self::$page_key, self::$section_key );
 		add_settings_field( "evaluate_permissions", "Permissions", array( __CLASS__, 'render_permissions' ), self::$page_key, self::$section_key );
 
 		register_setting( self::$page_key, Evaluate_Settings::$settings_key, array( __CLASS__, 'validate_settings' ) );
@@ -118,15 +117,6 @@ class Evaluate_Manage {
 		<?php
 	}
 
-	public static function render_allow_anonymous() {
-		$value = Evaluate_Settings::get_settings( 'allow_anonymous' );
-		?>
-		<label>
-			<input id="allow_anonymous" name="<?php echo Evaluate_Settings::$settings_key; ?>[allow_anonymous]" type="checkbox" value="on" <?php checked( $value, "on" ); ?>></input> Allowed By Default
-		</label>
-		<?php
-	}
-
 	public static function render_network_toggle() {
 		$value = Evaluate_Settings::get_network_settings( 'network_toggle' );
 		?>
@@ -140,10 +130,11 @@ class Evaluate_Manage {
 
 	public static function render_permissions() {
 		$roles = get_editable_roles();
+		$anonymous = Evaluate_Settings::get_settings( 'allow_anonymous' );
 
 		?>
 		<table id="permissions">
-			<thead>
+			<thead class="eval-desktop-only">
 				<tr>
 					<th></th>
 					<?php
@@ -167,6 +158,7 @@ class Evaluate_Manage {
 							?>
 							<td>
 								<input type="checkbox" name="<?php echo $name; ?>" value="on" <?php checked( ! empty( $info['capabilities'][ $permission ] ) ); ?>>
+								<span class="eval-mobile-only"><?php echo $title; ?></span>
 							</td>
 							<?php
 						}
@@ -175,6 +167,12 @@ class Evaluate_Manage {
 					<?php
 				}
 				?>
+				<tr>
+					<th>Anonymous</th>
+					<td>
+						<input id="allow_anonymous" name="<?php echo Evaluate_Settings::$settings_key; ?>[allow_anonymous]" type="checkbox" value="on" <?php checked( $anonymous, "on" ); ?>></input>
+						<span class="eval-mobile-only">Vote</span>
+					</td>
 			</tbody>
 		</table>
 		<?php

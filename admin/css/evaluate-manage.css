@@ -1,5 +1,4 @@
 
-/* TODO: Make this work better. Breaks on mobile */
 .form-table th,
 .form-table td {
 	padding-top: 0;
@@ -25,10 +24,6 @@ table th {
 	padding: 0 10px;
 }
 
-.form-table td {
-	height: 29px;
-}
-
 #permissions th:first-child {
 	text-align: left;
 	padding-left: 0;
@@ -36,4 +31,24 @@ table th {
 
 #permissions td {
 	text-align: center;
+}
+
+@media screen and (max-width: 480px) {
+	.eval-desktop-only {
+		display: none;
+	}
+
+	#permissions td {
+		text-align: left;
+	}
+
+	#permissions {
+		margin-left: 1em;
+	}
+}
+
+@media screen and (min-width: 480px) {
+	.eval-mobile-only {
+		display: none;
+	}
 }
