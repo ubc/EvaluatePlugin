@@ -40,11 +40,22 @@ class Evaluate_Manage {
 		}
 
 		if ( Evaluate_Settings::get_network_settings( 'network_toggle' ) != "on" || is_super_admin() ) {
-			add_settings_field( "evaluate_server", "Server", array( __CLASS__, 'render_field' ), self::$page_key, self::$section_key, 'server' );
-			add_settings_field( "evaluate_api_key", "API Key", array( __CLASS__, 'render_field' ), self::$page_key, self::$section_key, 'api_key' );
+			add_settings_field( "evaluate_server", "Server", array( __CLASS__, 'render_field' ), self::$page_key, self::$section_key, array( 
+				'slug' => 'server',
+				'description' => "The url for your <a href=\"https://github.com/ubc/EvaluateApp\">Evaluate Server</a>.",
+			) );
+
+			add_settings_field( "evaluate_api_key", "API Key", array( __CLASS__, 'render_field' ), self::$page_key, self::$section_key, array( 
+				'slug' => 'api_key',
+				'description' => "The api key provided by your Evaluate Server.",
+			) );
 		}
 
-		add_settings_field( "evaluate_stylesheet_url", "Stylesheet URL", array( __CLASS__, 'render_field' ), self::$page_key, self::$section_key, 'stylesheet_url' );
+		add_settings_field( "evaluate_stylesheet_url", "Stylesheet URL", array( __CLASS__, 'render_field' ), self::$page_key, self::$section_key, array( 
+			'slug' => 'stylesheet_url',
+			'description' => "A stylesheet that will be applied to metrics and editors embedded from the Evaluate Server."
+		) );
+
 		add_settings_field( "evaluate_permissions", "Permissions", array( __CLASS__, 'render_permissions' ), self::$page_key, self::$section_key );
 
 		register_setting( self::$page_key, Evaluate_Settings::$settings_key, array( __CLASS__, 'validate_settings' ) );
@@ -98,13 +109,15 @@ class Evaluate_Manage {
 
 	/**
 	 * A generic function for rendering a text field.
-	 * 
-	 * @param $slug the identifying string for this setting.
+	 * @param $args an array parameters to use in rendering. Expects slug and description values.
 	 */
-	public static function render_field( $slug ) {
+	public static function render_field( $args ) {
+		$slug = $args['slug'];
+		$description = $args['description'];
 		$value = Evaluate_Settings::get_settings( $slug );
 		?>
 		<input id="<?php echo $slug; ?>" name="<?php echo Evaluate_Settings::$settings_key . '[' . $slug . ']'; ?>" type="text" size="40" value="<?php echo $value; ?>"></input>
+		<small><em><?php echo $description; ?></em></small>
 		<?php
 	}
 
@@ -173,6 +186,7 @@ class Evaluate_Manage {
 				</tr>
 			</tbody>
 		</table>
+		<small><em>Anonymous voters can be controlled seperately for each metric.<br>If the Anonymous voters are allowed, all users will be allowed to vote regardless of role.</em></small>
 		<?php
 	}
 

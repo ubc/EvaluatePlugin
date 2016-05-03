@@ -15,7 +15,7 @@ class Evaluate_Settings {
 		'evaluate_vote' => "Vote",
 		'evaluate_display_metrics' => "Display Metrics",
 		'evaluate_edit_metrics' => "Edit Metrics",
-		'evaluate_edit_rubrics' => "Manage Rubrics",
+		'evaluate_edit_rubrics' => "Edit Rubrics",
 		'evaluate_vote_everywhere' => "See Admin Only Metrics",
 	);
 
