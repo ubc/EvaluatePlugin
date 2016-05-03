@@ -1,13 +1,12 @@
 <?php
 
 /**
- * This class registers and renders the form on each subsite,
- * where administrators can fill out the information that this plugin asks for.
+ * This class registers and renders the "Manage Metrics" page.
  */
 class Evaluate_Metrics {
 	// This slug is used for the metrics admin page.
 	public static $page_key = 'evaluate_metrics';
-
+	// These are special usage scenarios for the metrics.
 	private static $special_cases = array(
 		'shortcodes' => "Available as a shortcode",
 		'anonymous' => "Allow anonymous voters",
@@ -23,31 +22,39 @@ class Evaluate_Metrics {
 		add_action( 'wp_ajax_evaluate_set_usage', array( __CLASS__, 'ajax_set_usage' ) );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'register_scripts_and_styles' ), 5 );
 
+		// Check that either of the required permissions are satisfied.
 		if ( current_user_can( 'evaluate_display_metrics' ) || current_user_can( 'evaluate_edit_metrics' ) ) {
 			add_action( 'admin_menu', array( __CLASS__, 'add_page' ) );
 		}
 	}
 
+	/**
+	 * Register the JS script and CSS style that are necessary for this page.
+	 * @filter admin_enqueue_scripts
+	 */
 	public static function register_scripts_and_styles() {
 		wp_register_style( 'evaluate-metrics', Evaluate::$directory_url . 'admin/css/evaluate-metrics.css' );
 		wp_register_script( 'evaluate-metrics', Evaluate::$directory_url . 'admin/js/evaluate-metrics.js', array( 'jquery' ) );
 	}
 
 	/**
-	 * Define the admin pages.
-	 * @filter network_admin_menu
+	 * Define the admin page.
+	 * @filter admin_menu
 	 */
 	public static function add_page() {
 		add_submenu_page(
 			Evaluate_Manage::$page_key, // Parent slug
 			"Evaluate Metrics", // Page title
 			"Manage Metrics", // Menu title
-			Evaluate_Manage::$required_capability, // Capability required to view this page.
+			'read', // Capability required to view this page.
 			self::$page_key, // Page slug
-			array( __CLASS__, 'render_page' )
+			array( __CLASS__, 'render_page' ) // Rendering callback.
 		);
 	}
 
+	/**
+	 * An ajax callback which is used to save the forms rendered on this page.
+	 */
 	public static function ajax_set_usage() {
 		$usage = empty( $_POST['usage'] ) ? null : $_POST['usage'];
 		$metric_id = empty( $_POST['metric_id'] ) ? null : $_POST['metric_id'];
@@ -69,29 +76,36 @@ class Evaluate_Metrics {
 		<div class="wrap">
 			<?php
 			if ( isset( $_GET['metric_id'] ) && current_user_can( 'evaluate_edit_metrics' ) ) {
+				// IF the metric_id has been provided then we embed the Evaluate Server's built-in editor.
 				?>
 				<h1>
 					<?php echo empty( $_GET['metric_id'] ) ? "Create" : "Edit"; ?> Metric
 					<a href="?page=<?php echo self::$page_key; ?>" class="page-title-action">Go Back</a>
 				</h1>
 				<?php
+				// This function handles the authentication and embedding.
 				Evaluate_Connector::print_frame( "/metrics/edit", array(
 					'metric_id' => $_GET['metric_id'],
 				) );
 			} else {
+				// Set our style and script to be included.
 				wp_enqueue_style( 'evaluate-metrics' );
 				wp_enqueue_script( 'evaluate-metrics' );
 
+				// Retrieve a list of metrics from the Evaluate Server.
 				$metrics = Evaluate_Connector::get_data( "/metrics/list" );
 				$metrics = json_decode( $metrics );
 
+				// Get the saved usage options.
 				$usage = get_option( 'evaluate_usage', array() );
 
+				// Construct the list of usage cases, from various post types.
 				$cases = array();
 				foreach ( get_post_types( array( 'public' => true, ), 'objects' ) as $slug => $object ) {
 					$cases[ $slug ] = "Visible on " . $object->labels->name;
 				}
 
+				// Render the page.
 				?>
 				<h1>
 					Manage Metrics
@@ -99,12 +113,14 @@ class Evaluate_Metrics {
 				</h1>
 				<?php
 				if ( empty( $metrics ) ) {
+					// If we receive no metrics, display a warning.
 					?>
 					<div class="notice notice-warning">
 						<p>No Metrics Received from the Server.</p>
 					</div>
 					<?php
 				} else {
+					// Render each metric in a list.
 					?>
 					<ul>
 						<?php
@@ -122,10 +138,16 @@ class Evaluate_Metrics {
 		<?php
 	}
 
+	/**
+	 * Render a single metric.
+	 * @param $metric the attributes of a metric.
+	 * @param $cases an array of usage cases to render.
+	 * @param $usage an array of saved usage settings.
+	 */
 	private static function render_metric( $metric, $cases, $usage ) {
 		?>
 		<li>
-			<form>
+			<form class="metric">
 				<strong class="title"><?php echo $metric->name; ?></strong>
 				<details>
 					<summary>Attributes</summary>
@@ -177,6 +199,11 @@ class Evaluate_Metrics {
 		<?php
 	}
 
+	/**
+	 * Render the form elements for controlling the usage settings for a particular metric.
+	 * @param $cases an array of usage cases to render.
+	 * @param $usage an array of saved usage settings.
+	 */
 	private static function render_usage_cases( $cases, $usage ) {
 		foreach ( $cases as $slug => $text ) {
 			?>

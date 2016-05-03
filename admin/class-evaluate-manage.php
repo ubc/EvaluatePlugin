@@ -1,10 +1,8 @@
 <?php
 
 /**
- * This class registers and renders the form on each subsite,
- * where administrators can fill out the information that this plugin asks for.
+ * This class registers and renders the "Evaluate Settings" page, as well as the Evaluate parent menu item.
  */
-
 class Evaluate_Manage {
 	// This slug is used for the admin page.
 	public static $page_key = 'evaluate';
@@ -30,6 +28,10 @@ class Evaluate_Manage {
 		wp_register_style( 'evaluate-manage', Evaluate::$directory_url . 'admin/css/evaluate-manage.css' );
 	}
 
+	/**
+	 * Register the settings.
+	 * @filter admin_init
+	 */
 	public static function register_settings() {
 		add_settings_section( self::$section_key, 'Settings', array( __CLASS__, 'render_settings_description' ), self::$page_key );
 
@@ -49,14 +51,14 @@ class Evaluate_Manage {
 	}
 
 	/**
-	 * Define the network admin page.
-	 * @filter network_admin_menu
+	 * Define the admin page.
+	 * @filter admin_menu
 	 */
 	public static function add_page() {
 		add_menu_page(
 			"Evaluate", // Page title
 			"Evaluate", // Menu title
-			self::$required_capability, // Capability required to view this page.
+			'read', // Capability required to view this page.
 			self::$page_key // Page slug
 		);
 
@@ -66,7 +68,7 @@ class Evaluate_Manage {
 			"Settings", // Menu title
 			self::$required_capability, // Capability required to view this page.
 			self::$page_key, // Page slug
-			array( __CLASS__, 'render_page' )
+			array( __CLASS__, 'render_page' ) // Rendering callback.
 		);
 	}
 
@@ -94,13 +96,11 @@ class Evaluate_Manage {
 		// Do Nothing
 	}
 
-	public static function render_network_settings_description() {
-		?>
-		<hr>
-		<em>The following options are site wide, and only accessible by Network Administrators.</em>
-		<?php
-	}
-
+	/**
+	 * A generic function for rendering a text field.
+	 * 
+	 * @param $slug the identifying string for this setting.
+	 */
 	public static function render_field( $slug ) {
 		$value = Evaluate_Settings::get_settings( $slug );
 		?>
@@ -108,6 +108,9 @@ class Evaluate_Manage {
 		<?php
 	}
 
+	/**
+	 * Renders the checkbox which toggles whether certain settings are controlled by the Network Admin or not.
+	 */
 	public static function render_network_toggle() {
 		$value = Evaluate_Settings::get_network_settings( 'network_toggle' );
 		?>
@@ -119,6 +122,9 @@ class Evaluate_Manage {
 		<?php
 	}
 
+	/**
+	 * Render the controls for adjusting settings.
+	 */
 	public static function render_permissions() {
 		$roles = get_editable_roles();
 		$anonymous = Evaluate_Settings::get_settings( 'allow_anonymous' );
@@ -170,6 +176,10 @@ class Evaluate_Manage {
 		<?php
 	}
 
+	/**
+	 * Validate the settings which are being saved by the user.
+	 * @param $input the settings to be validated.
+	 */
 	public static function validate_settings( $input ) {
 		$result = shortcode_atts( array(
 			'server'          => "",
@@ -178,24 +188,30 @@ class Evaluate_Manage {
 			'allow_anonymous' => "",
 		), $input );
 
+		// Trim the server url.
 		$result[ 'server' ] = untrailingslashit( trim( $result[ 'server' ] ) );
 
+		// Store the permissions settings.
 		$permissions = empty ( $input['permissions'] ) ? array() : $input['permissions'];
 		Evaluate_Settings::set_permissions( $permissions );
 
+		// If the user is a Network Admin, we need to handle a few extra settings.
 		if ( is_super_admin() ) {
 			$network = shortcode_atts( array(
 				'network_toggle' => "",
 			), $input );
 
+			// If the network toggle is on, then some settings need to be saved across the network.
 			if ( $network['network_toggle'] == 'on' ) {
 				$network['server'] = $result['server'];
 				$network['api_key'] = $result['api_key'];
 			}
 
+			// Save the network options.
 			update_site_option( Evaluate_Settings::$network_settings_key, $network );
 		}
 
+		// All the values returned will be saved automatically.
 		return $result;
 	}
 }

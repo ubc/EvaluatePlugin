@@ -1,11 +1,10 @@
 <?php
 
 /**
- * This class registers and renders the form on each subsite,
- * where administrators can fill out the information that this plugin asks for.
+ * This class registers and renders the "Voting Data" page, which it retrieves from the Evaluate server.
  */
 class Evaluate_Data {
-	// This slug is used for the metrics admin page.
+	// This slug is used for the data admin page.
 	public static $page_key = 'evaluate_data';
 	// The format for displaying date/time.
 	public static $datetime_format = "D, M j Y";
@@ -15,69 +14,74 @@ class Evaluate_Data {
 	 */
 	public static function init() {
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'register_scripts_and_styles' ), 5 );
-
-		if ( current_user_can( 'evaluate_display' ) ) {
-			add_action( 'admin_menu', array( __CLASS__, 'add_page' ) );
-		}
-	}
-
-	public static function register_scripts_and_styles() {
-		wp_register_style( 'evaluate-data', Evaluate::$directory_url . 'admin/css/evaluate-data.css' );
-		//wp_register_script( 'evaluate-data', Evaluate::$directory_url . 'admin/js/evaluate-data.js', array( 'jquery' ) );
+		add_action( 'admin_menu', array( __CLASS__, 'add_page' ) );
 	}
 
 	/**
-	 * Define the admin pages.
-	 * @filter network_admin_menu
+	 * Register the scripts and styles.
+	 * @filter admin_enqueue_scripts
+	 */
+	public static function register_scripts_and_styles() {
+		wp_register_style( 'evaluate-data', Evaluate::$directory_url . 'admin/css/evaluate-data.css' );
+	}
+
+	/**
+	 * Define the admin page.
+	 * @filter admin_menu
 	 */
 	public static function add_page() {
 		add_submenu_page(
 			Evaluate_Manage::$page_key, // Parent slug
 			"Evaluate Data", // Page title
 			"Data", // Menu title
-			Evaluate_Manage::$required_capability, // Capability required to view this page.
+			'evaluate_display_metrics', // Capability required to view this page.
 			self::$page_key, // Page slug
-			array( __CLASS__, 'render_page' )
+			array( __CLASS__, 'render_page' ) // Rendering callback.
 		);
 	}
 
 	/**
-	 * Render the metrics page.
+	 * Render the data page.
 	 */
 	public static function render_page() {
+		// Set our styles/scripts to be included.
 		wp_enqueue_style( 'evaluate-data' );
-		//wp_enqueue_script( 'evaluate-data' );
 
+		// Retrieve raw voting data from the Evaluate Servers.
 		$data = Evaluate_Connector::get_data( "/data" );
 		$data = json_decode( $data );
 
-		$regular_voters = 0;
-		$admin_voters = 0;
-		$users = count_users();
-
-		foreach ( $users['avail_roles'] as $slug => $count ) {
-			$role = get_role( $slug );
-
-			if ( ! empty( $role->capabilities['evaluate_vote'] ) ) {
-				$regular_voters += $count;
-				
-				if ( ! empty( $role->capabilities['evaluate_vote_everywhere'] ) ) {
-					$admin_voters += $count;
-				}
-			}
-		}
-
+		// Render the display.
 		?>
 		<div class="wrap">
 			<h1>Voting Data</h1>
 			<?php
 			if ( empty( $data ) ) {
+				// If the data array is empty, display a warning.
 				?>
 				<div class="notice notice-warning">
 					<p>No Data Received from the Server.</p>
 				</div>
 				<?php
 			} else {
+				// Count the number of eligible voters.
+				$regular_voters = 0;
+				$admin_voters = 0;
+				$users = count_users();
+
+				foreach ( $users['avail_roles'] as $slug => $count ) {
+					$role = get_role( $slug );
+
+					if ( ! empty( $role->capabilities['evaluate_vote'] ) ) {
+						$regular_voters += $count;
+						
+						if ( ! empty( $role->capabilities['evaluate_vote_everywhere'] ) ) {
+							$admin_voters += $count;
+						}
+					}
+				}
+
+				// Render the data, sorted by metric.
 				?>
 				<ul>
 					<?php
@@ -96,8 +100,14 @@ class Evaluate_Data {
 		<?php
 	}
 
+	/**
+	 * Render a single item in the list. This means all data associated with a particular metric.
+	 */
 	private static function render_metric( $data, $eligible_voters = 0 ) {
+		// Count the total number of locations where this metric has been rated.
 		$total_contexts = count( $data->scores );
+
+		// Sort out all the unique voters, and collate data about them.
 		$unique_voters = 0;
 		$voters = array();
 
@@ -119,6 +129,7 @@ class Evaluate_Data {
 			$voters[ $user_id ]['total_votes']++;
 		}
 
+		// Render the data.
 		?>
 		<li>
 			<strong><a href="?page=<?php echo Evaluate_Metrics::$page_key; ?>&metric_id=<?php echo $data->metric_id; ?>"><?php echo $data->name; ?></a></strong>
@@ -146,6 +157,9 @@ class Evaluate_Data {
 		<?php
 	}
 
+	/**
+	 * Renders data for a specific context.
+	 */
 	private static function render_context( $data, $eligible_voters ) {
 		$date = new DateTime( $data->modified );
 		$date = $date->format( self::$datetime_format );
@@ -160,9 +174,14 @@ class Evaluate_Data {
 		<?php
 	}
 
+	/**
+	 * Renders data for a specific voter.
+	 */
 	private static function render_voter( $user_id, $data, $total_contexts ) {
 		$date = new DateTime( $data['last_vote'] );
 		$date = $date->format( self::$datetime_format );
+
+		// Get Wordpress data about this voter.
 		$user = get_userdata( $user_id );
 		$name = empty( $user ) ? $user_id : $user->display_name;
 		$link = empty( $user ) ? "#" : get_author_posts_url( $user_id, $name );

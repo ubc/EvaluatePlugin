@@ -1,4 +1,5 @@
 
+/* === Form Table === */
 .form-table th,
 .form-table td {
 	padding-top: 0;
@@ -10,20 +11,7 @@
 	width: 100%;
 }
 
-.submit {
-	margin: 0 !important;
-	padding-top: 2px;
-}
-
-form h3 {
-	display: none;
-}
-
-table td,
-table th {
-	padding: 0 10px;
-}
-
+/* === Permissions Table === */
 #permissions th:first-child {
 	text-align: left;
 	padding-left: 0;
@@ -33,6 +21,7 @@ table th {
 	text-align: center;
 }
 
+/* === Mobile Adjustments === */
 @media screen and (max-width: 480px) {
 	.eval-desktop-only {
 		display: none;

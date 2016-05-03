@@ -3,7 +3,7 @@
  * @wordpress-plugin
  * Plugin Name:       Evaluate Plugin
  * Plugin URI:        http://ctlt.ubc.ca
- * Description:       Interfaces with the Evaluate NodeJS App. www.github.com/ubc/EvaluateApp
+ * Description:       Interfaces with the Evaluate NodeJS App. http://www.github.com/ubc/EvaluateApp
  * Version:           1.0.0
  * Author:            CTLT, Devindra Payment
  * Text Domain:       evaluate
@@ -16,6 +16,7 @@
 class Evaluate {
 	public static $directory_path = '';
 	public static $directory_url = '';
+	// The version number of this plugin. Used to track upgrades.
 	public static $version = "1.0.0";
 	
 	public static function init() {
@@ -23,7 +24,6 @@ class Evaluate {
 		self::$directory_url = plugin_dir_url( __FILE__ );
 		
 		add_action( 'plugins_loaded', array( __CLASS__, 'load' ), 11 );
-
 		register_activation_hook( __FILE__, array( __CLASS__, 'install' ) );
 	}
 
@@ -45,11 +45,14 @@ class Evaluate {
 		}
 	}
 
+	/**
+	 * This is the activation hook used to set defaults and perform upgrades when necessary.
+	 */
 	public static function install() {
 		require_once( self::$directory_path . '/includes/class-evaluate-settings.php' );
-
 		$version = get_site_option( 'evaluate_version', "0" );
 
+		// If the user has a version number less than 1.0.0 that means their installation has never been initialized.
 		if ( version_compare( $version, "1.0.0" ) < 0 ) {
 			// Set default permissions.
 			Evaluate_Settings::set_permissions( array(
@@ -81,26 +84,8 @@ class Evaluate {
 			) );
 		}
 
+		// Update the site's version number.
 		update_site_option( 'evaluate_version', self::$version );
-	}
-
-	/**
-	 * Generate a custom error message and deactivates the plugin if we don't meet requirements
-	 * @filter admin_notices
-	 */
-	public static function check_requirements() {
-		if ( ! self::meets_requirements() ) {
-			?>
-			<div id="message" class="error">
-				<p>
-					<?php printf( __( 'UBC Registrant requires CMB2 to run, and has thus been <a href="%s">deactivated</a>. Please install and activate CMB2 and then reactivate this plugin.', 'ubcreg' ), admin_url( 'plugins.php' ) ); ?>
-				</p>
-			</div>
-			<?php
-
-			// Deactivate our plugin
-			deactivate_plugins( plugin_basename( __FILE__ ) );
-		}
 	}
 }
 
