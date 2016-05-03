@@ -13,7 +13,7 @@ class Evaluate_Metrics {
 		'anonymous' => "Allow anonymous voters",
 		'admins_only' => "Only visible to admins",
 		'comment' => "Visible on Comments",
-		'comment_attached' => "Attached to Comments [i]",
+		'comment_attached' => "Attached to Comments <span class=\"info\" title=\"If enabled, the user's vote will be shown alongside their comment.\">[?]</span>",
 	);
 
 	/**

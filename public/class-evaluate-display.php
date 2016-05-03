@@ -48,40 +48,47 @@ class Evaluate_Display {
 		return self::$user_id;
 	}
 
-	public static function get_context( $force_type = null, $force_id = null ) {
-		if ( self::$context === false ) {
-			if ( ( 'comment_text' === current_filter() && $force_type == null ) || $force_type == 'comment' ) {
-				// TODO: Support the 'comment_attached' usage setting.
-				$id    = empty( $force_id ) ? get_comment_ID() : $force_id;
-				$type  = 'comment';
-				$title = get_comment( $id )->comment_author . "'s comment";
-				$url   = get_comment_link();
-			} else if ( ( 'the_content' === current_filter() && $force_type == null ) || $force_type == 'post' ) {
-				$id    = empty( $force_id ) ? get_the_ID() : $force_id;
-				$type  = get_post_type( $id );
-				$title = get_the_title( $id );
-				$url   = get_the_permalink( $id );
-			} else {
-				$type  = empty( $force_type ) ? 'webpage' : $force_type;
-				$title = wp_title( "", false );
-				$url   = empty( $force_id ) ? $_SERVER["HTTP_HOST"] . $_SERVER["REQUEST_URI"] : $force_id;
-			}
-
-			self::$context = apply_filters( 'evaluate_get_context', array(
-				'type'  => $type,
-				'title' => $title,
-				'url'   => $url,
-			) );
+	public static function get_context( $filter, $force_type = null, $force_id = null ) {
+		if ( ( 'comment_text' === $filter && $force_type == null ) || $force_type == 'comment' ) {
+			$id    = empty( $force_id ) ? get_comment_ID() : $force_id;
+			$type  = 'comment';
+			$title = get_comment( $id )->comment_author . "'s comment";
+			$url   = get_comment_link();
+		} else if ( ( 'comment_text' !== $filter && get_the_ID() != false && $force_type == null ) || $force_type == 'post' ) {
+			$id    = empty( $force_id ) ? get_the_ID() : $force_id;
+			$type  = get_post_type( $id );
+			$title = get_the_title( $id );
+			$url   = get_the_permalink( $id );
+		} else {
+			$type  = empty( $force_type ) ? 'webpage' : $force_type;
+			$title = wp_title( "", false );
+			$url   = empty( $force_id ) ? $_SERVER["HTTP_HOST"] . $_SERVER["REQUEST_URI"] : $force_id;
 		}
 
-		return self::$context;
+		return apply_filters( 'evaluate_get_context', array(
+			'type'  => $type,
+			'title' => $title,
+			'url'   => $url,
+			'id'    => $id,
+		) );
 	}
 
 	public static function render_metrics( $content ) {
 		$usage_settings = self::get_usage_settings();
-		$context = self::get_context();
+		$context = self::get_context( current_filter() );
 
 		foreach ( $usage_settings as $metric_id => $usage ) {
+			if ( $context['type'] == 'comment' && in_array( 'comment_attached', $usage ) ) {
+				$comment = get_comment( $context['id'] );
+				$parent_id = $comment->comment_post_ID;
+				$parent_context = self::get_context( 'the_content', null, $parent_id );
+
+				if ( in_array( $parent_context['type'], $usage ) ) {
+					$content .= self::render_metric( $metric_id, $parent_context, true );
+					continue;
+				}
+			}
+
 			if ( in_array( $context['type'], $usage ) ) {
 				$content .= self::render_metric( $metric_id, $context );
 			}
@@ -90,20 +97,20 @@ class Evaluate_Display {
 		return $content;	
 	}
 
-	public static function render_metric( $metric_id, $context ) {
+	public static function render_metric( $metric_id, $context, $preview = false ) {
 		$user_id = self::get_user_id();
 		$usage = self::get_usage_settings( $metric_id );
 
 		if ( ! is_user_logged_in() && ! in_array( 'anonymous', $usage ) ) {
-			return "anon<br>";
+			return;
 		}
 
 		if ( in_array( 'admin_only', $usage ) && ! current_user_can( 'evaluate_vote_everywhere' ) ) {
-			return "admin<br>";
+			return;
 		}
 
 		if ( empty( $metric_id ) ) {
-			return 'no ID<br>';
+			return;
 		}
 
 		ob_start();
@@ -113,6 +120,7 @@ class Evaluate_Display {
 			'user_id'    => $user_id,
 			'context_id' => $context['url'],
 			'stylesheet' => Evaluate_Settings::get_settings( 'stylesheet_url' ),
+			'preview'    => $preview ? 'preview' : '',
 			'lrs'        => array(
 				'username' => is_user_logged_in() ? wp_get_current_user()->display_name : $user_id,
 				'homeurl'  => get_site_url(),
@@ -155,7 +163,7 @@ class Evaluate_Display {
 		if ( ! empty( $error ) ) {
 			return current_user_can( 'evaluate_display' ) ? $error : "";
 		} else {
-			$context = self::get_context( $atts['type'], $atts['context'] );
+			$context = self::get_context( current_filter(), $atts['type'], $atts['context'] );
 			return self::render_metric( $atts['metric'], $context );
 		}
 	}

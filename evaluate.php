@@ -13,6 +13,8 @@
  * GitHub Plugin URI: www.github.com/ubc/EvaluatePlugin
  */
 
+// TODO: Set default permissions.
+
 class Evaluate {
 	public static $directory_path = '';
 	public static $directory_url = '';
@@ -30,7 +32,6 @@ class Evaluate {
 	 * @filter plugins_loaded
 	 */
 	public static function load() {
-		// TODO: Move this to the 'includes' directory.
 		require_once( self::$directory_path . '/includes/class-evaluate-connector.php' );
 		require_once( self::$directory_path . '/includes/class-evaluate-settings.php' );
 
