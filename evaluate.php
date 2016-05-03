@@ -4,7 +4,7 @@
  * Plugin Name:       Evaluate Plugin
  * Plugin URI:        http://ctlt.ubc.ca
  * Description:       Interfaces with the Evaluate NodeJS App. www.github.com/ubc/EvaluateApp
- * Version:           0.1.0
+ * Version:           1.0.0
  * Author:            CTLT, Devindra Payment
  * Text Domain:       evaluate
  * License:           GPL-2.0+
@@ -13,18 +13,18 @@
  * GitHub Plugin URI: www.github.com/ubc/EvaluatePlugin
  */
 
-// TODO: Set default permissions.
-
 class Evaluate {
 	public static $directory_path = '';
 	public static $directory_url = '';
+	public static $version = "1.0.0";
 	
 	public static function init() {
 		self::$directory_path = plugin_dir_path( __FILE__ );
 		self::$directory_url = plugin_dir_url( __FILE__ );
 		
-		add_action( 'admin_notices', array( __CLASS__, 'check_requirements' ) );
 		add_action( 'plugins_loaded', array( __CLASS__, 'load' ), 11 );
+
+		register_activation_hook( __FILE__, array( __CLASS__, 'install' ) );
 	}
 
 	/**
@@ -35,7 +35,7 @@ class Evaluate {
 		require_once( self::$directory_path . '/includes/class-evaluate-connector.php' );
 		require_once( self::$directory_path . '/includes/class-evaluate-settings.php' );
 
-		if ( self::meets_requirements() && is_admin() ) {
+		if ( is_admin() ) {
 			require_once( self::$directory_path . '/admin/class-evaluate-manage.php' );
 			require_once( self::$directory_path . '/admin/class-evaluate-metrics.php' );
 			require_once( self::$directory_path . '/admin/class-evaluate-rubrics.php' );
@@ -43,6 +43,45 @@ class Evaluate {
 		} else {
 			require_once( self::$directory_path . '/public/class-evaluate-display.php' );
 		}
+	}
+
+	public static function install() {
+		require_once( self::$directory_path . '/includes/class-evaluate-settings.php' );
+
+		$version = get_site_option( 'evaluate_version', "0" );
+
+		if ( version_compare( $version, "1.0.0" ) < 0 ) {
+			// Set default permissions.
+			Evaluate_Settings::set_permissions( array(
+				'administrator' => array(
+					'evaluate_vote' => true,
+					'evaluate_display' => true,
+					'evaluate_vote_everywhere' => true,
+					'evaluate_metrics' => true,
+					'evaluate_rubrics' => true,
+				),
+				'editor'        => array(
+					'evaluate_vote' => true,
+					'evaluate_display' => true,
+					'evaluate_vote_everywhere' => true,
+					'evaluate_metrics' => true,
+				),
+				'author'        => array(
+					'evaluate_vote' => true,
+					'evaluate_display' => true,
+					'evaluate_vote_everywhere' => true,
+				),
+				'contributor'   => array(
+					'evaluate_vote' => true,
+					'evaluate_display' => true,
+				),
+				'subscriber'    => array(
+					'evaluate_vote' => true,
+				),
+			) );
+		}
+
+		update_site_option( 'evaluate_version', self::$version );
 	}
 
 	/**
@@ -62,13 +101,6 @@ class Evaluate {
 			// Deactivate our plugin
 			deactivate_plugins( plugin_basename( __FILE__ ) );
 		}
-	}
-
-	/**
-	 * Checks if the required plugin is installed.
-	 */
-	public static function meets_requirements() {
-		return true; //defined( 'CMB2_LOADED' );
 	}
 }
 

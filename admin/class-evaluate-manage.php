@@ -13,15 +13,6 @@ class Evaluate_Manage {
 	// The capability that a user needs to edit the form.
 	public static $required_capability = 'manage_options';
 
-	// TODO: Make sure permissions are appropriately enforced.
-	private static $permissions = array(
-		'evaluate_vote' => "Vote",
-		'evaluate_display' => "Display Metrics",
-		'evaluate_metrics' => "Edit Metrics",
-		'evaluate_rubrics' => "Manage Rubrics",
-		'evaluate_vote_everywhere' => "See Admin Only Metrics",
-	);
-
 	/**
 	 * @filter init
 	 */
@@ -138,7 +129,7 @@ class Evaluate_Manage {
 				<tr>
 					<th></th>
 					<?php
-					foreach ( self::$permissions as $value => $title ) {
+					foreach ( Evaluate_Settings::$permissions as $value => $title ) {
 						?>
 						<th><?php echo $title; ?></th>
 						<?php
@@ -153,7 +144,7 @@ class Evaluate_Manage {
 					<tr>
 						<th><?php echo $info['name']; ?></th>
 						<?php
-						foreach ( self::$permissions as $permission => $title ) {
+						foreach ( Evaluate_Settings::$permissions as $permission => $title ) {
 							$name = Evaluate_Settings::$settings_key . "[permissions][" . $slug . "][" . $permission . "]";
 							?>
 							<td>
@@ -189,7 +180,7 @@ class Evaluate_Manage {
 		$result[ 'server' ] = untrailingslashit( trim( $input[ 'server' ] ) );
 
 		$permissions = empty ( $input['permissions'] ) ? array() : $input['permissions'];
-		self::set_permissions( $permissions );
+		Evaluate_Settings::set_permissions( $permissions );
 
 		if ( is_super_admin() ) {
 			$network = shortcode_atts( array(
@@ -204,23 +195,8 @@ class Evaluate_Manage {
 			update_site_option( Evaluate_Settings::$network_settings_key, $network );
 		}
 
-		error_log( "Local Saving " . print_r( $result, true ) );
-
 		return $result;
 	}
-
-	public static function set_permissions( $permissions ) {
-		$roles = get_editable_roles();
-
-		foreach ( $roles as $slug => $info ) {
-			$role = get_role( $slug );
-
-			foreach ( self::$permissions as $permission => $name ) {
-				$role->add_cap( $permission, ! empty( $permissions[ $slug ][ $permission ] ) );
-			}
-		}
-	}
-
 }
 
 add_action( 'init', array( 'Evaluate_Manage', 'init' ) );

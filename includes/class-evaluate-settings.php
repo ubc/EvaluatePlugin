@@ -12,6 +12,15 @@ class Evaluate_Settings {
 	// Used to store metric usage
 	private static $usage_key = 'evaluate_usage';
 
+	// TODO: Make sure permissions are appropriately enforced.
+	public static $permissions = array(
+		'evaluate_vote' => "Vote",
+		'evaluate_display' => "Display Metrics",
+		'evaluate_metrics' => "Edit Metrics",
+		'evaluate_rubrics' => "Manage Rubrics",
+		'evaluate_vote_everywhere' => "See Admin Only Metrics",
+	);
+
 	public static function set_usage( $data, $metric_id = null ) {
 		if ( ! empty( $metric_id ) ) {
 			$usage = get_option( self::$usage_key, array() );
@@ -59,6 +68,18 @@ class Evaluate_Settings {
 			return $settings;
 		} else {
 			return empty( $settings[ $slug ] ) ? $default : $settings[ $slug ];
+		}
+	}
+
+	public static function set_permissions( $permissions ) {
+		$roles = get_editable_roles();
+
+		foreach ( $roles as $slug => $info ) {
+			$role = get_role( $slug );
+
+			foreach ( self::$permissions as $permission => $name ) {
+				$role->add_cap( $permission, ! empty( $permissions[ $slug ][ $permission ] ) );
+			}
 		}
 	}
 }
