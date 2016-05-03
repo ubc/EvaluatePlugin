@@ -14,7 +14,7 @@ class Evaluate_Rubrics {
 	public static function init() {
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'register_scripts_and_styles' ), 5 );
 
-		if ( current_user_can( 'evaluate_rubrics' ) ) {
+		if ( current_user_can( 'evaluate_edit_rubrics' ) ) {
 			add_action( 'admin_menu', array( __CLASS__, 'add_page' ) );
 		}
 	}
@@ -69,7 +69,7 @@ class Evaluate_Rubrics {
 				if ( empty( $blueprints ) ) {
 					?>
 					<div class="notice notice-warning">
-						<p>No Blueprints Received from the Server.</p>
+						<p>No Rubrics Received from the Server.</p>
 					</div>
 					<?php
 				} else {

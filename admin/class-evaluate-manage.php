@@ -164,6 +164,7 @@ class Evaluate_Manage {
 						<input id="allow_anonymous" name="<?php echo Evaluate_Settings::$settings_key; ?>[allow_anonymous]" type="checkbox" value="on" <?php checked( $anonymous, "on" ); ?>></input>
 						<span class="eval-mobile-only">Vote</span>
 					</td>
+				</tr>
 			</tbody>
 		</table>
 		<?php
@@ -177,7 +178,7 @@ class Evaluate_Manage {
 			'allow_anonymous' => "",
 		), $input );
 
-		$result[ 'server' ] = untrailingslashit( trim( $input[ 'server' ] ) );
+		$result[ 'server' ] = untrailingslashit( trim( $result[ 'server' ] ) );
 
 		$permissions = empty ( $input['permissions'] ) ? array() : $input['permissions'];
 		Evaluate_Settings::set_permissions( $permissions );
@@ -188,8 +189,8 @@ class Evaluate_Manage {
 			), $input );
 
 			if ( $network['network_toggle'] == 'on' ) {
-				$network['server'] = $input['server'];
-				$network['api_key'] = $input['api_key'];
+				$network['server'] = $result['server'];
+				$network['api_key'] = $result['api_key'];
 			}
 
 			update_site_option( Evaluate_Settings::$network_settings_key, $network );

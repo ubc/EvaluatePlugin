@@ -105,12 +105,16 @@ class Evaluate_Display {
 			return;
 		}
 
-		if ( in_array( 'admin_only', $usage ) && ! current_user_can( 'evaluate_vote_everywhere' ) ) {
+		if ( in_array( 'admins_only', $usage ) && ! current_user_can( 'evaluate_vote_everywhere' ) ) {
 			return;
 		}
 
 		if ( empty( $metric_id ) ) {
 			return;
+		}
+
+		if ( ! current_user_can( 'evaluate_vote' ) ) {
+			$preview = true;
 		}
 
 		ob_start();

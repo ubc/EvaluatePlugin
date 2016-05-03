@@ -55,24 +55,24 @@ class Evaluate {
 			Evaluate_Settings::set_permissions( array(
 				'administrator' => array(
 					'evaluate_vote' => true,
-					'evaluate_display' => true,
+					'evaluate_display_metrics' => true,
 					'evaluate_vote_everywhere' => true,
-					'evaluate_metrics' => true,
-					'evaluate_rubrics' => true,
+					'evaluate_edit_metrics' => true,
+					'evaluate_edit_rubrics' => true,
 				),
 				'editor'        => array(
 					'evaluate_vote' => true,
-					'evaluate_display' => true,
+					'evaluate_display_metrics' => true,
 					'evaluate_vote_everywhere' => true,
-					'evaluate_metrics' => true,
+					'evaluate_edit_metrics' => true,
 				),
 				'author'        => array(
 					'evaluate_vote' => true,
-					'evaluate_display' => true,
+					'evaluate_display_metrics' => true,
 					'evaluate_vote_everywhere' => true,
 				),
 				'contributor'   => array(
-					'evaluate_vote' => true,
+					'evaluate_vote_metrics' => true,
 					'evaluate_display' => true,
 				),
 				'subscriber'    => array(

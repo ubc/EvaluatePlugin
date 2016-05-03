@@ -23,7 +23,7 @@ class Evaluate_Metrics {
 		add_action( 'wp_ajax_evaluate_set_usage', array( __CLASS__, 'ajax_set_usage' ) );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'register_scripts_and_styles' ), 5 );
 
-		if ( current_user_can( 'evaluate_display' ) || current_user_can( 'evaluate_metrics' ) ) {
+		if ( current_user_can( 'evaluate_display_metrics' ) || current_user_can( 'evaluate_edit_metrics' ) ) {
 			add_action( 'admin_menu', array( __CLASS__, 'add_page' ) );
 		}
 	}
@@ -52,7 +52,7 @@ class Evaluate_Metrics {
 		$usage = empty( $_POST['usage'] ) ? null : $_POST['usage'];
 		$metric_id = empty( $_POST['metric_id'] ) ? null : $_POST['metric_id'];
 
-		if ( empty( $metric_id ) ) {
+		if ( empty( $metric_id ) || ! current_user_can( 'evaluate_display_metrics' ) ) {
 			echo 'failure';
 		} else {
 			Evaluate_Settings::set_usage( $usage, $metric_id );
@@ -68,7 +68,7 @@ class Evaluate_Metrics {
 		?>
 		<div class="wrap">
 			<?php
-			if ( isset( $_GET['metric_id'] ) ) {
+			if ( isset( $_GET['metric_id'] ) && current_user_can( 'evaluate_edit_metrics' ) ) {
 				?>
 				<h1>
 					<?php echo empty( $_GET['metric_id'] ) ? "Create" : "Edit"; ?> Metric
@@ -142,17 +142,34 @@ class Evaluate_Metrics {
 				<div class="column">
 					<?php echo self::render_usage_cases( self::$special_cases, $usage ); ?>
 				</div>
-				<div>
-					<label>
-						Shortcode
-						<input class="shortcode-box" type="text" value="[evaluate metric='<?php echo $metric->metric_id; ?>']" <?php echo in_array( 'shortcodes', $usage ) ? '' : 'disabled="disabled"'; ?>></input>
-					</label>
-				</div>
+				<?php
+				if ( current_user_can( 'evaluate_display_metrics' ) ) {
+					?>
+					<div>
+						<label>
+							Shortcode
+							<input class="shortcode-box" type="text" value="[evaluate metric='<?php echo $metric->metric_id; ?>']" <?php echo in_array( 'shortcodes', $usage ) ? '' : 'disabled="disabled"'; ?>></input>
+						</label>
+					</div>
+					<?php
+				}
+				?>
 				<div class="actions">
-					<input type="hidden" name="action" value="evaluate_set_usage"></input>
-					<input type="hidden" name="metric_id" value="<?php echo $metric->metric_id; ?>"></input>
-					<input type="button" class="save-button button button-primary" disabled="disabled" value="Saved"></input>
-					<a href="?page=<?php echo self::$page_key; ?>&metric_id=<?php echo $metric->metric_id; ?>" class="edit-button button">Edit Metric</a>
+					<?php
+					if ( current_user_can( 'evaluate_display_metrics' ) ) {
+						?>
+						<input type="hidden" name="action" value="evaluate_set_usage"></input>
+						<input type="hidden" name="metric_id" value="<?php echo $metric->metric_id; ?>"></input>
+						<input type="button" class="save-button button button-primary" disabled="disabled" value="Saved"></input>
+						<?php
+					}
+
+					if ( current_user_can( 'evaluate_edit_metrics' ) ) {
+						?>
+						<a href="?page=<?php echo self::$page_key; ?>&metric_id=<?php echo $metric->metric_id; ?>" class="edit-button button">Edit Metric</a>
+						<?php
+					}
+					?>
 				</div>
 				<br class="clear">
 			</form>
@@ -164,7 +181,7 @@ class Evaluate_Metrics {
 		foreach ( $cases as $slug => $text ) {
 			?>
 			<label>
-				<input class="<?php echo $slug; ?>" type="checkbox" name="usage[<?php echo $slug; ?>]" value="<?php echo $slug; ?>" <?php checked( in_array( $slug, $usage ) ); ?>></input>
+				<input class="<?php echo $slug; ?>" type="checkbox" name="usage[<?php echo $slug; ?>]" value="<?php echo $slug; ?>" <?php checked( in_array( $slug, $usage ) ); ?> <?php disabled( ! current_user_can( 'evaluate_display_metrics' ) ); ?>></input>
 				<?php echo $text; ?>
 			</label>
 			<br>
